@@ -195,6 +195,41 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
 .sticker{font-size:min(40vmin,260px);animation:spin 1.2s cubic-bezier(.3,1.5,.5,1)}
 @keyframes spin{from{transform:scale(0) rotate(-200deg)}}
 
+/* 오늘의 한글 */
+.daily-banner{flex:none;width:100%;max-width:1100px;display:flex;align-items:center;gap:18px;background:#fff;border:5px solid var(--kid);border-radius:32px;padding:10px 26px;box-shadow:0 6px 0 var(--kid2)}
+.daily-banner .db-ic{font-size:54px}
+.daily-banner .db-t{flex:1;text-align:left}
+.daily-banner .db-t b{display:block;font-weight:400;font-size:36px}
+.daily-banner .db-t small{font-size:22px;color:var(--soft)}
+.daily-banner .db-dots{font-size:40px;letter-spacing:4px}
+.daily-banner .db-o{opacity:.3;filter:grayscale(1)}
+.daily-banner.done{border-color:var(--ok);box-shadow:0 6px 0 #1f9a55}
+.pill{background:var(--kid);border-radius:999px;padding:8px 18px;font-size:28px;box-shadow:0 5px 0 var(--kid2);flex:none}
+.pill b{font-weight:400;display:inline-block}
+.dmain{justify-content:space-evenly}
+.dhero{display:flex;align-items:center;gap:26px;background:#fff;border-radius:40px;padding:14px 36px;box-shadow:0 8px 0 var(--line);flex:none}
+.dhero .big{font-size:min(19vmin,150px);line-height:1.05;color:var(--c)}
+.dhero .big.v{color:var(--v)}
+.dhero .em{font-size:min(13vmin,100px)}
+.dhero .row5{display:flex;gap:10px}
+.dhero .row5 button{font-size:min(9vmin,70px);background:var(--kid3);border-radius:22px;padding:2px 16px;box-shadow:0 4px 0 var(--kid)}
+.dtasks{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;flex:none}
+.dtask{width:min(23vmin,190px);border-radius:32px;background:#fff;padding:14px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 7px 0 var(--line);position:relative;border:5px solid transparent}
+.dtask .ic{font-size:min(9vmin,70px);line-height:1.1}
+.dtask .lb{font-size:min(3.3vmin,26px);white-space:nowrap}
+.dtask .pg{font-size:22px;letter-spacing:3px;color:var(--kid2)}
+.dtask.next{border-color:var(--kid);box-shadow:0 7px 0 var(--kid2);animation:pulse 1.4s infinite}
+.dtask.ok{background:#E4F8EC;box-shadow:0 7px 0 var(--ok)}
+.dtask.ok .pg{color:var(--ok)}
+.dtask.ok::after{content:"✅";position:absolute;top:-14px;right:-10px;font-size:42px}
+.week{display:flex;gap:10px;flex:none}
+.week div{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:22px;color:var(--soft)}
+.week span{width:min(8vmin,62px);height:min(8vmin,62px);border-radius:50%;background:#fff;box-shadow:0 4px 0 var(--line);display:grid;place-items:center;font-size:min(5vmin,38px);border:4px solid transparent}
+.week .today span{border-color:var(--kid)}
+.week .today{color:var(--ink)}
+.gobig{background:var(--ok);color:#fff;border-radius:999px;font-size:46px;padding:12px 60px;box-shadow:0 7px 0 #1f9a55;flex:none}
+.gobig.fin{background:#fff;color:var(--ink);box-shadow:0 7px 0 var(--line);font-size:36px}
+
 /* settings */
 .sheet{background:#fff;border-radius:34px;padding:26px 30px;width:min(94vw,680px);max-height:90vh;overflow-y:auto;font-family:system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;font-size:18px;line-height:1.5;user-select:text;-webkit-user-select:text}
 .sheet h2{font-family:var(--font);font-weight:400;font-size:30px;margin:0 0 8px}
@@ -322,7 +357,8 @@ let S = null;
 try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
 S = Object.assign({ rate: .8, voice: '' }, S || {});
 S.kids = S.kids || {};
-for (const k of ['davin', 'arin']) S.kids[k] = Object.assign({ stars: 0, heard: {}, traced: {}, wtraced: {}, solved: {}, read: {}, bal: 0 }, S.kids[k] || {});
+const freshKid = () => ({ stars: 0, heard: {}, traced: {}, wtraced: {}, solved: {}, read: {}, bal: 0, log: {}, dm: null });
+for (const k of ['davin', 'arin']) S.kids[k] = Object.assign(freshKid(), S.kids[k] || {});
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 const KIDS = { davin: { name: '다빈', img: 'avatar-davin.png' }, arin: { name: '아린', img: 'avatar-arin.png' } };
 let kid = 'davin';
@@ -425,8 +461,10 @@ function go(fn, ...a) {
   app.innerHTML = ''; fn(...a);
 }
 function topbar(title, back) {
-  const el = h(`<div class="top"><button class="back press">⬅</button><h1><img src="${KIDS[kid].img}" alt="">${title}</h1><div class="stars">⭐<b>${K().stars}</b></div></div>`);
-  el.querySelector('.back').onclick = back; app.append(el); return el;
+  let pill = '';
+  if (DM) { const t = dailyTasks().find(t => t.id === DM.id), p = dayState().prog[DM.id] || 0; if (t) pill = `<div class="pill">🎯 <b>${Math.min(p, t.n)}</b>/${t.n}</div>`; }
+  const el = h(`<div class="top"><button class="back press">⬅</button><h1><img src="${KIDS[kid].img}" alt="">${title}</h1>${pill}<div class="stars">⭐<b>${K().stars}</b></div></div>`);
+  el.querySelector('.back').onclick = DM ? () => go(daily) : back; app.append(el); return el;
 }
 function mainEl(html = '') { const m = h(`<div class="main">${html}</div>`); app.append(m); return m; }
 function tabs(list, cur, onPick) {
@@ -441,7 +479,7 @@ function home() {
   const el = h(`<div class="home">
     <div class="logo"><span>한</span><span>글</span><span></span><span>놀</span><span>이</span></div>
     <div class="kids">${['davin', 'arin'].map(k => `<button class="kidcard ${k} press" data-k="${k}">
-      <img src="${KIDS[k].img}" alt=""><div class="nm">${KIDS[k].name}</div><div class="st">⭐ ${S.kids[k].stars}${stickersOf(k).length ? ' · ' + stickersOf(k).slice(-3).join('') : ''}</div></button>`).join('')}</div>
+      <img src="${KIDS[k].img}" alt=""><div class="nm">${KIDS[k].name}${S.kids[k].log[dayKey()] ? ' 🏅' : ''}</div><div class="st">⭐ ${S.kids[k].stars}${stickersOf(k).length ? ' · ' + stickersOf(k).slice(-3).join('') : ''}</div></button>`).join('')}</div>
     <button class="gear press" aria-label="부모 설정">⚙️</button></div>`);
   $$('.kidcard', el).forEach(b => b.onclick = () => { kid = b.dataset.k; SFX.tap(); say(KIDS[kid].name + '야, 안녕!'); go(menu); });
   $('.gear', el).onclick = settings;
@@ -460,9 +498,16 @@ const ACTS = {
 };
 const MENU = { davin: ['blocks', 'puzzle', 'read', 'trace', 'cards', 'balloon'], arin: ['cards', 'trace', 'balloon', 'blocks'] };
 function menu() {
+  DM = null;
   document.body.className = kid;
   topbar(KIDS[kid].name, () => go(home));
   const m = mainEl();
+  const d = dayState(), tasks = dailyTasks(), all = tasks.every(t => (d.prog[t.id] || 0) >= t.n);
+  const ban = h(`<button class="daily-banner press ${all ? 'done' : ''}"><span class="db-ic">${all ? '🏅' : '📅'}</span>
+    <div class="db-t"><b>오늘의 한글</b><small>${lessonLetter(d)} · ${d.lesson + 1}번째 날</small></div>
+    <div class="db-dots">${tasks.map(t => (d.prog[t.id] || 0) >= t.n ? '✅' : `<span class="db-o">${t.ic}</span>`).join('')}</div></button>`);
+  ban.onclick = () => { SFX.tap(); go(daily); };
+  m.append(ban);
   const ids = MENU[kid];
   const grid = h(`<div class="acts ${ids.length === 4 ? 'n4' : ''}"></div>`);
   ids.forEach(id => {
@@ -474,6 +519,109 @@ function menu() {
   m.append(grid);
   const st = stickersOf(kid);
   m.append(h(`<div class="shelf"><small>내 스티커</small>${st.length ? st.join('') : '<small>별 10개 모으면 생겨요 ⭐</small>'}</div>`));
+}
+
+/* ───────── 📅 오늘의 한글: 매일 미션 ─────────
+   하루에 한 글자씩. 그날 미션을 다 끝내야 다음 날 새 글자로 넘어감(빠진 날은 같은 글자를 다시). */
+const ARIN_ORDER = [...'ㄱㄴㅏㄷㅓㄹㅗㅁㅜㅂㅡㅅㅣㅇㅈㅊㅑㅋㅕㅌㅛㅍㅠㅎ'];
+const ORDER = () => kid === 'arin' ? ARIN_ORDER : CJ;
+const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+let DM = null;   // 지금 하는 미션 {id, letter, finished}
+function dayState() {
+  const k = K(), t = dayKey();
+  if (!k.dm || k.dm.date !== t) { const p = k.dm; k.dm = { date: t, lesson: p ? p.lesson + (p.done ? 1 : 0) : 0, prog: {}, done: false }; save(); }
+  return k.dm;
+}
+const lessonLetter = (d = dayState()) => ORDER()[d.lesson % ORDER().length];
+function dailyTasks() {
+  const L = lessonLetter();
+  return kid === 'arin'
+    ? [{ id: 'card', ic: '🔊', t: '오늘의 글자', n: 1 }, { id: 'trace', ic: '✏️', t: '두 번 쓰기', n: 2 }, { id: 'balloon', ic: '🎈', t: '풍선 톡톡', n: 5 }]
+    : [{ id: 'build', ic: '🧱', t: `${L} 글자 만들기`, n: 4 }, { id: 'read', ic: '📖', t: '읽고 찾기', n: 3 }, { id: 'puzzle', ic: '🧩', t: '낱말 퍼즐', n: 2 }, { id: 'wtrace', ic: '✏️', t: '낱말 쓰기', n: 1 }];
+}
+const wordsWith = c => WORDS.filter(x => [...x.w].some(s => decompose(s)[0] === c));
+// 아린 풍선: 오늘 글자 + 앞에서 배운 글자 4개
+const reviewSet = () => { const o = ORDER(), n = dayState().lesson % o.length; return o.slice(Math.max(0, n - 4), n + 1); };
+const isDM = id => DM && DM.id === id;
+function weekStrip() {
+  const now = new Date(), wd = (now.getDay() + 6) % 7, mon = new Date(now); mon.setDate(now.getDate() - wd);
+  return `<div class="week">${[...'월화수목금토일'].map((n, i) => {
+    const d = new Date(mon); d.setDate(mon.getDate() + i);
+    return `<div class="${i === wd ? 'today' : ''}"><span>${K().log[dayKey(d)] ? '🏅' : ''}</span>${n}</div>`;
+  }).join('')}</div>`;
+}
+function daily() {
+  DM = null;
+  document.body.className = kid;
+  topbar('📅 오늘의 한글', () => go(menu));
+  const d = dayState(), L = lessonLetter(d), x = info(L), tasks = dailyTasks();
+  const m = mainEl(); m.classList.add('dmain');
+  const hero = kid === 'arin'
+    ? h(`<div class="dhero"><button class="big ${isCons(L) ? '' : 'v'}">${L}</button><button class="em">${x.e}</button></div>`)
+    : h(`<div class="dhero"><button class="big">${L}</button><div class="row5">${[...'ㅏㅓㅗㅜㅣ'].map(v => `<button>${compose(L, v)}</button>`).join('')}</div></div>`);
+  $('.big', hero).onclick = () => { bounce($('.big', hero)); say(phon(L), 350, x.w); };
+  if ($('.em', hero)) $('.em', hero).onclick = () => { bounce($('.em', hero)); say(x.w); };
+  $$('.row5 button', hero).forEach(b => b.onclick = () => { bounce(b); say(b.textContent); });
+  const next = tasks.find(t => (d.prog[t.id] || 0) < t.n);
+  const tl = h('<div class="dtasks"></div>');
+  tasks.forEach(t => {
+    const p = Math.min(d.prog[t.id] || 0, t.n);
+    const b = h(`<button class="dtask press ${p >= t.n ? 'ok' : t === next ? 'next' : ''}"><span class="ic">${t.ic}</span><span class="lb">${t.t}</span><span class="pg">${'●'.repeat(p)}${'○'.repeat(t.n - p)}</span></button>`);
+    b.onclick = () => startTask(t.id);
+    tl.append(b);
+  });
+  const any = Object.keys(d.prog).length;
+  const gb = next ? h(`<button class="gobig press">▶ ${any ? '이어서' : '시작'}</button>`) : h('<button class="gobig fin press">🏅 오늘 끝! 내일 또 만나요</button>');
+  gb.onclick = () => next ? startTask(next.id) : (confetti(), say('오늘의 한글 끝! 내일 또 만나요'));
+  m.append(hero, tl, h(weekStrip()), gb);
+  if (!next) say('오늘의 한글 끝! 내일 또 만나요');
+  else if (!any) say('오늘의 글자', 250, phon(L), 400, x.w);
+}
+function startTask(id) {
+  const d = dayState(), L = lessonLetter(d), t = dailyTasks().find(t => t.id === id);
+  DM = { id, letter: L, finished: (d.prog[id] || 0) >= t.n };
+  SFX.tap();
+  if (id === 'card') { const list = isCons(L) ? CONS : VOWS; go(cards, isCons(L) ? 'c' : 'v'); openCard(list, list.findIndex(x => x.j === L), () => go(daily)); }
+  else if (id === 'trace') go(traceJamo, L, () => go(daily));
+  else if (id === 'balloon') go(balloons);
+  else if (id === 'build') go(blocks, 'quiz');
+  else if (id === 'read') go(readQuiz);
+  else if (id === 'puzzle') go(puzzle);
+  else if (id === 'wtrace') go(traceWord, dmWord(1, 3));
+}
+// 오늘 자음이 들어간 낱말 하나 (없으면 아무 낱말)
+function dmWord(min, max) {
+  const pool = wordsWith(DM.letter).filter(x => x.n >= min && x.n <= max && x.w !== lastWord);
+  return rnd(pool.length ? pool : WORDS.filter(x => x.n >= min && x.n <= max));
+}
+function report(id) {
+  if (!DM || DM.id !== id || DM.finished) return;
+  const d = dayState(), t = dailyTasks().find(t => t.id === id); if (!t) return;
+  d.prog[id] = (d.prog[id] || 0) + 1; save();
+  const pb = $('.pill b'); if (pb) { pb.textContent = Math.min(d.prog[id], t.n); bounce(pb.parentElement, 'bump'); }
+  if (d.prog[id] >= t.n) { DM.finished = true; const my = DM; setTimeout(() => { if (DM === my) taskDone(); }, 1900); }
+}
+function taskDone() {
+  const d = dayState(), next = dailyTasks().find(t => (d.prog[t.id] || 0) < t.n);
+  if (!next) return dayDone();
+  hush(); $$('.ov').forEach(o => o.remove());
+  const ov = h(`<div class="ov"><div class="bigcard"><div style="font-size:48px">미션 완료!</div><div class="sticker">✅</div>
+    <div class="row"><button class="rb press dh">📅</button><button class="gobig press nx">▶ 다음 ${next.ic}</button></div></div></div>`);
+  $('.dh', ov).onclick = () => go(daily);
+  $('.nx', ov).onclick = () => startTask(next.id);
+  document.body.append(ov); SFX.ok(); say('미션 완료!');
+}
+function dayDone() {
+  const d = dayState(), k = K();
+  if (d.done) return go(daily);
+  d.done = true; k.log[d.date] = 1; save();
+  go(daily);
+  const ov = h(`<div class="ov"><div class="bigcard"><div style="font-size:46px">오늘의 한글 끝!</div><div class="sticker">🏅</div>
+    <div style="font-size:28px;color:var(--soft)">⭐ +3</div><div class="row"><button class="gobig press">좋아! 👍</button></div></div></div>`);
+  $('.gobig', ov).onclick = () => { ov.remove(); go(daily); };
+  document.body.append(ov);
+  SFX.tada(); confetti(60); say('오늘의 한글 끝!', 300, '정말 잘했어!');
+  [0, 350, 700].forEach(ms => setTimeout(() => addStar($('.sticker', ov)), 600 + ms));
 }
 
 /* ───────── 🔊 소리 카드 ───────── */
@@ -518,6 +666,7 @@ function openCard(list, i, refresh) {
   $('.wr', ov).onclick = () => go(traceJamo, x.j, () => go(cards, c ? 'c' : 'v'));
   document.body.append(ov);
   play();
+  if (isDM('card') && x.j === DM.letter) setTimeout(() => report('card'), 2600);
   if (!K().heard[x.j]) { K().heard[x.j] = 1; save(); setTimeout(() => addStar(pic), 600); }
 }
 
@@ -693,12 +842,14 @@ function traceJamo(j, back) {
       SFX.tada(); confetti(); say(phon(j), 400, x.w);
       if (!K().traced[j]) { K().traced[j] = 1; save(); }
       addStar($('.tbox', m)); bounce($('.nx', m), 'pop'); $('.nx', m).classList.add('go');
+      if (isDM('trace') && j === DM.letter) report('trace');
     },
   });
   $('.snd', m).onclick = () => say(phon(j), 400, x.w);
   $('.see', m).onclick = () => t.play();
   $('.clr', m).onclick = () => { t.reset(); $('.nx', m).classList.remove('go'); };
-  $('.nx', m).onclick = () => go(traceJamo, list[(list.indexOf(j) + 1) % list.length], back);
+  // 오늘의 미션 중이면 같은 글자를 한 번 더
+  $('.nx', m).onclick = () => go(traceJamo, isDM('trace') ? j : list[(list.indexOf(j) + 1) % list.length], back);
   setTimeout(() => t.play(), 350);
   say(phon(j));
 }
@@ -719,6 +870,7 @@ function traceWord(x, si = 0) {
         $$('.wordhead span', m).forEach(e => { e.className = 'dn'; });
         if (!K().wtraced[x.w]) { K().wtraced[x.w] = 1; save(); }
         addStar($('.tbox', m)); $('.nx', m).classList.add('go'); bounce($('.nx', m), 'pop');
+        report('wtrace');
       }
     },
   });
@@ -728,6 +880,8 @@ function traceWord(x, si = 0) {
   $('.clr', m).onclick = () => t.reset();
   $('.nx', m).onclick = () => {
     if (si < syl.length - 1 && !$('.nx', m).classList.contains('go')) return go(traceWord, x, si + 1);
+    lastWord = x.w;
+    if (isDM('wtrace')) return go(traceWord, dmWord(1, 3));
     const i = WORDS.indexOf(x); go(traceWord, WORDS[(i + 1) % WORDS.length]);
   };
   setTimeout(() => t.play(), 350);
@@ -736,9 +890,10 @@ function traceWord(x, si = 0) {
 
 /* ───────── 🧱 글자 만들기: 자음 + 모음 = 글자 ───────── */
 function blocks(mode = 'free') {
+  if (isDM('build')) mode = 'quiz';
   topbar('🧱 글자 만들기', () => go(menu));
   const m = mainEl();
-  m.append(tabs([['free', '🧱 마음대로'], ['quiz', '🎯 소리 듣고 만들기']], mode, t => go(blocks, t)));
+  if (!isDM('build')) m.append(tabs([['free', '🧱 마음대로'], ['quiz', '🎯 소리 듣고 만들기']], mode, t => go(blocks, t)));
   const eq = h(`<div class="eq"><button class="slot cs"></button><span class="op">+</span><button class="slot vs"></button><span class="op">=</span><button class="slot res">?</button></div>`);
   const bonus = h('<div class="bonus"></div>');
   const cp = h('<div class="pal cp"></div>'), vp = h('<div class="pal vp"></div>');
@@ -769,7 +924,7 @@ function blocks(mode = 'free') {
       if (s === target) {
         say(phon(c), 250, phon(v), 400, s);
         setTimeout(() => {
-          SFX.tada(); confetti(24); addStar(res);
+          SFX.tada(); confetti(24); addStar(res); report('build');
           if (ONE[s]) { bonus.innerHTML = `${ONE[s]} <small>${s}</small>`; bounce(bonus, 'pop'); }
           setTimeout(newTarget, 1900);
         }, 1500);
@@ -791,7 +946,7 @@ function blocks(mode = 'free') {
   function newTarget() {
     busy = false; c = v = null; bonus.innerHTML = '';
     const easyV = 'ㅏㅓㅗㅜㅡㅣ';
-    let s; do { s = compose(rnd(CJ), rnd(Object.keys(K().solved).length > 10 ? VJ : [...easyV])); } while (s === target);
+    let s; do { s = isDM('build') ? compose(DM.letter, rnd(VJ)) : compose(rnd(CJ), rnd(Object.keys(K().solved).length > 10 ? VJ : [...easyV])); } while (s === target);
     target = s; paint(); say(target);
   }
   if (mode === 'quiz') { tg.classList.remove('hidden'); tg.onclick = () => say(target); newTarget(); }
@@ -808,7 +963,7 @@ function levelPool(done, forRead) {
 }
 function puzzle() {
   topbar('🧩 낱말 퍼즐', () => go(menu));
-  const k = K(), x = rnd(levelPool(k.solved)); lastWord = x.w;
+  const k = K(), x = isDM('puzzle') ? dmWord(2, 3) : rnd(levelPool(k.solved)); lastWord = x.w;
   const syl = [...x.w], solvedN = Object.keys(k.solved).length;
   const extraN = solvedN < 5 ? 1 : solvedN < 15 ? 2 : 3;
   const others = shuffle([...new Set(WORDS.flatMap(y => [...y.w]))].filter(s => !syl.includes(s))).slice(0, extraN);
@@ -838,7 +993,7 @@ function puzzle() {
     if (made === x.w) {
       locked = true; slots.forEach(s => s.classList.add('good'));
       SFX.tada(); confetti(); say(x.w);
-      k.solved[x.w] = 1; save(); addStar($('.slots', m));
+      k.solved[x.w] = 1; save(); addStar($('.slots', m)); report('puzzle');
       const nb = $('.nextbtn', m); nb.classList.remove('hidden'); nb.onclick = () => go(puzzle);
     } else {
       SFX.no();
@@ -857,7 +1012,7 @@ function puzzle() {
 /* ───────── 📖 읽고 찾기: 글자를 읽고 맞는 그림 고르기 ───────── */
 function readQuiz() {
   topbar('📖 읽고 찾기', () => go(menu));
-  const k = K(), x = rnd(levelPool(k.read, true)); lastWord = x.w;
+  const k = K(), x = isDM('read') ? dmWord(1, 3) : rnd(levelPool(k.read, true)); lastWord = x.w;
   const n = Object.keys(k.read).length < 6 ? 3 : 4;
   const opts = shuffle([x, ...shuffle(WORDS.filter(y => y !== x)).slice(0, n - 1)]);
   const m = mainEl(`<div class="rq">
@@ -876,7 +1031,7 @@ function readQuiz() {
       over = true; b.classList.add('good'); $$('.ch', m).forEach(e => { if (e !== b) e.classList.add('no'); });
       $$('.rword button', m).forEach(e => e.classList.add('lit'));
       SFX.tada(); confetti(); say(x.w);
-      k.read[x.w] = 1; save(); addStar(b);
+      k.read[x.w] = 1; save(); addStar(b); report('read');
       const nb = $('.nextbtn', m); nb.classList.remove('hidden'); nb.onclick = () => go(readQuiz);
     } else {
       SFX.no(); bounce(b, 'shake'); b.classList.add('no'); say(o.w);
@@ -900,16 +1055,20 @@ function balloons() {
   GROUPS.forEach((g, i) => { const b = h(`<button class="press ${i === k.bal ? 'on' : ''}">${g.t}</button>`); b.onclick = () => { k.bal = i; save(); go(balloons); }; lv.append(b); });
   const sky = h(`<div class="sky"><div class="cloud" style="top:8%;animation-delay:-8s">☁️</div><div class="cloud" style="top:30%;animation-delay:-25s;font-size:60px">☁️</div>
     <button class="say press">🔊 <span></span></button></div>`);
+  const dm = isDM('balloon');
+  if (dm) lv.classList.add('hidden');
   m.append(lv, sky);
-  const group = GROUPS[k.bal].js;
+  const group = dm ? reviewSet() : GROUPS[k.bal].js;
   let target = null, bl = [], raf = 0, last = 0, lock = false, prevT = '';
   const speed = () => sky.clientHeight / (kid === 'arin' ? 9 : 6.5);
   function announce() { const x = info(target); $('.say span', sky).textContent = x.e; say(phon(target), 350, x.w); }
   $('.say', sky).onclick = announce;
   function round() {
     bl.forEach(b => b.el.remove()); bl = []; lock = false;
-    do target = rnd(group); while (target === prevT && group.length > 1); prevT = target;
-    const pool = group.length >= 3 ? group : [...CJ, ...VJ];
+    if (dm) target = group.length === 1 || Math.random() < .6 ? DM.letter : rnd(group.filter(j => j !== DM.letter));
+    else { do target = rnd(group); while (target === prevT && group.length > 1); }
+    prevT = target;
+    const pool = group.length >= 3 ? group : dm ? [...new Set([...group, ...ORDER().slice(0, 6)])] : [...CJ, ...VJ];
     const n = kid === 'arin' ? 3 : 4;
     const letters = shuffle([target, ...shuffle(pool.filter(j => j !== target)).slice(0, n - 1)]);
     const W = sky.clientWidth, H = sky.clientHeight, cols = shuffle(BCOL);
@@ -934,7 +1093,7 @@ function balloons() {
         p.style.setProperty('--dx', Math.cos(a) * d + 'px'); p.style.setProperty('--dy', Math.sin(a) * d + 'px');
         sky.append(p); setTimeout(() => p.remove(), 800);
       }
-      say(phon(b.j)); addStar(b.el);
+      say(phon(b.j)); addStar(b.el); report('balloon');
       setTimeout(round, 1500);
     } else { SFX.no(); bounce(b.el, 'wob'); say(phon(b.j)); }
   }
@@ -968,12 +1127,16 @@ function settings() {
     <div class="note" style="margin-top:6px">소리가 안 나거나 어색하면: 아이패드 설정 → 손쉬운 사용 → 콘텐츠 말하기 → 음성 → 한국어 → '유나(향상됨)' 받기. 무음 모드면 효과음이 안 날 수 있어요.</div>
     <h3>지금까지</h3>
     <table>${row('davin')}${row('arin')}</table>
+    <h3>📅 오늘의 한글 — 오늘 글자</h3>
+    <div class="note">하루 미션을 다 끝내면 다음 날 새 글자로 넘어가요. 너무 쉽거나 어려우면 여기서 바꿔 주세요.</div>
+    ${['davin', 'arin'].map(k => `<div style="margin:6px 0">${KIDS[k].name}: <button class="sbtn" data-ls="${k}" data-d="-1">◀</button> <b data-lt="${k}"></b> <button class="sbtn" data-ls="${k}" data-d="1">▶</button></div>`).join('')}
     <h3>이렇게 써 보세요</h3>
     <ul>
       <li><b>아린</b> (처음): 🔊 소리 카드로 ㄱ~ㅁ 다섯 글자만 듣고 → ✏️ 따라 쓰기 → 🎈 풍선 놀이(ㄱㄴㄷㄹㅁ 단계). 익숙해지면 다음 다섯 글자로. 모음은 ㅏㅓㅗㅜㅡㅣ 먼저.</li>
       <li><b>다빈</b> (받침 없는 글자 읽는 중): 🧱 글자 만들기(🎯 소리 듣고 만들기)로 '그+아=가' 합치는 연습 → 🧩 낱말 퍼즐(그림 보고 글자 맞추기) → 📖 읽고 찾기(소리 없이 읽고 그림 고르기, 막히면 글자를 눌러 한 글자씩 듣기).</li>
       <li>자음 소리는 '그, 느, 드…'(ㅡ를 붙인 소리)로, 모음은 '아, 야, 어…'로 들려줘요. 글자 이름(기역, 니은…)은 소리 카드의 이름 단추에 있어요.</li>
       <li>따라 쓰기: 초록 점에서 시작해 화살표 방향으로. 👀 은 쓰는 순서 보여 주기, 두 번 틀리면 저절로 보여 줘요. 아린이는 넉넉하게, 다빈이는 방향까지 봐요.</li>
+      <li>📅 <b>오늘의 한글</b>: 매일 한 글자. 아린은 글자 듣기 → 두 번 쓰기 → 풍선 5개, 다빈은 그날 자음으로 글자 만들기 4 → 읽고 찾기 3 → 낱말 퍼즐 2 → 낱말 쓰기 1. 다 하면 🏅 도장과 별 3개.</li>
       <li>별 10개마다 동물 스티커가 생겨요.</li>
     </ul>
     <h3>처음부터 다시</h3>
@@ -985,8 +1148,15 @@ function settings() {
   $('#test', ov).onclick = () => say('안녕! 한글 놀이 하자!', 300, '그', 200, '아', 300, '가');
   $$('[data-reset]', ov).forEach(b => b.onclick = () => {
     const k = b.dataset.reset;
-    if (confirm(`${KIDS[k].name} 별·스티커·기록을 모두 지울까요? 되돌릴 수 없어요.`)) { S.kids[k] = { stars: 0, heard: {}, traced: {}, wtraced: {}, solved: {}, read: {}, bal: 0 }; save(); ov.remove(); go(home); }
+    if (confirm(`${KIDS[k].name} 별·스티커·기록을 모두 지울까요? 되돌릴 수 없어요.`)) { S.kids[k] = freshKid(); save(); ov.remove(); go(home); }
   });
+  // 아이별 오늘 글자 (kid 를 잠깐 바꿔서 그 아이 기준으로 계산)
+  const withKid = (k, f) => { const was = kid; kid = k; try { return f(); } finally { kid = was; } };
+  const showLesson = () => $$('[data-lt]', ov).forEach(e => withKid(e.dataset.lt, () => { const d = dayState(); e.textContent = `${lessonLetter(d)} (${d.lesson + 1}번째)`; }));
+  $$('[data-ls]', ov).forEach(b => b.onclick = () => withKid(b.dataset.ls, () => {
+    const d = dayState(); d.lesson = Math.max(0, d.lesson + +b.dataset.d); d.prog = {}; d.done = false; save(); showLesson();
+  }));
+  showLesson();
   $('#close', ov).onclick = () => { ov.remove(); go(home); };
   document.body.append(ov);
 }
