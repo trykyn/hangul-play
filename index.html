@@ -311,6 +311,14 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
 .streak b{font-weight:400;color:#E8590C}
 .streak small{font-size:20px;color:var(--soft)}
 
+/* 🤔 생각 시간 */
+.think{pointer-events:none}
+.think .ch,.think .tile,.think .bal,.think .pal button{filter:grayscale(.8);opacity:.45;transition:opacity .2s}
+.thinkb{position:fixed;left:50%;top:16%;transform:translateX(-50%);background:#fff;border-radius:999px;padding:12px 32px;font-size:min(6vmin,40px);box-shadow:0 6px 0 var(--line);z-index:45;pointer-events:none;animation:thinkin .35s cubic-bezier(.3,1.6,.5,1);white-space:nowrap}
+.thinkb.soft{top:auto;bottom:10%;font-size:min(5vmin,32px);background:#FFF4C7;box-shadow:0 5px 0 #F2C94C}
+@keyframes thinkin{from{transform:translateX(-50%) scale(.5);opacity:0}}
+.pal button.hint{animation:pulse 1s infinite;box-shadow:0 5px 0 var(--ok);background:#E4F8EC}
+
 /* settings */
 .sheet{background:#fff;border-radius:34px;padding:26px 30px;width:min(94vw,680px);max-height:90vh;overflow-y:auto;font-family:system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;font-size:18px;line-height:1.5;user-select:text;-webkit-user-select:text}
 .sheet h2{font-family:var(--font);font-weight:400;font-size:30px;margin:0 0 8px}
@@ -566,6 +574,25 @@ function confetti(n = 36) {
     box.append(s);
   }
   document.body.append(box); setTimeout(() => box.remove(), 3000);
+}
+/* ───────── 🤔 막 누르기 막기 ─────────
+   틀리면 잠깐 '생각 시간' (보기를 누를 수 없고 흐려짐) 뒤에 문제를 다시 들려줌.
+   ⭐ 과 오늘의 미션 칸은 한 번에 맞혔을 때만 — 틀린 문제는 맞혀도 '다음엔 한 번에!' (복습은 나중에 다시 나옴) */
+const thinkMs = () => kid === 'arin' ? 1800 : 2500;
+function thinkLock(area, replay) {
+  if (!area || area.classList.contains('think')) return;
+  area.classList.add('think');
+  const b = h(`<div class="thinkb">🤔 ${kid === 'arin' ? '잘 듣고' : '잘 생각하고'} 다시!</div>`);
+  document.body.append(b);
+  setTimeout(() => { area.classList.remove('think'); b.remove(); if (replay && area.isConnected) say(...replay); }, thinkMs());
+}
+// 생각 시간에는 그 영역 누르기를 확실히 막음 (CSS 만으로 안 되는 기기 대비)
+for (const ev of ['click', 'pointerdown']) document.addEventListener(ev, e => {
+  if (e.target.closest && e.target.closest('.think')) { e.stopImmediatePropagation(); e.preventDefault(); }
+}, true);
+function oops() {
+  const b = h('<div class="thinkb soft">다음엔 한 번에! 💪</div>');
+  document.body.append(b); setTimeout(() => b.remove(), 1900);
 }
 function bounce(el, cls = 'boing') { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
 const STICKERS = '🐶🐱🐰🦊🐼🐨🐯🦁🐸🐵🦄🐙🦋🐞🐢🐬🦖🐧🦉🐳🦒🐘🦩🐹🐻🐮🐷🐥🦔🦭'.match(/\p{Extended_Pictographic}/gu);
@@ -919,11 +946,13 @@ function review() {
       if (o.val === q.ans) {
         over = true; b.classList.add('good'); $$('.qo', ch).forEach(e => { if (e !== b) e.classList.add('no'); });
         $$('.rword button', top).forEach(e => e.classList.add('lit'));
-        SFX.ok(); say(...q.done); addStar(b); report('review');
+        SFX.ok(); say(...q.done);
+        if (!q.wrong) { addStar(b); report('review'); } else oops();
         setTimeout(() => { if (box.isConnected && !$('.ov')) next(); }, 2000);
       } else {
         SFX.no(); bounce(b, 'shake'); b.classList.add('no'); say(...o.say);
-        if (!q.again) { q.again = true; retry.push({ ...q, opts: shuffle(q.opts) }); }
+        if (!q.again) { q.again = true; retry.push({ ...q, wrong: false, opts: shuffle(q.opts) }); }
+        q.wrong = true; thinkLock(ch, q.ask);
       }
     });
   }
@@ -1254,7 +1283,7 @@ function blocks(mode = 'free') {
   const cp = h('<div class="pal cp"></div>'), vp = h('<div class="pal vp"></div>');
   const tg = h('<button class="tgt press hidden">🔊 다시 듣기</button>');
   m.append(eq, tg, bonus, cp, vp);
-  let c = null, v = null, t = null, target = null, busy = false;
+  let c = null, v = null, t = null, target = null, busy = false, tries = 0;
   const cs = $('.cs', eq), vs = $('.vs', eq), ts = $('.ts', eq), res = $('.res', eq);
   cons.forEach(j => { const b = h(`<button class="press">${j}</button>`); b.onclick = () => pick(j); cp.append(b); });
   vows.forEach(j => { const b = h(`<button class="press">${j}</button>`); b.onclick = () => pick(j); vp.append(b); });
@@ -1288,7 +1317,8 @@ function blocks(mode = 'free') {
     if (s === target) {
       say(...blendParts(s));
       setTimeout(() => {
-        SFX.tada(); confetti(24); addStar(res); report('build'); showBonus(s);
+        SFX.tada(); confetti(24); showBonus(s);
+        if (!tries) { addStar(res); report('build'); } else oops();
         setTimeout(newTarget, 1900);
       }, 1500);
     } else {
@@ -1299,6 +1329,8 @@ function blocks(mode = 'free') {
         if (v !== tv) { bounce(vs, 'shake'); v = null; }
         if (t && t !== tt) { bounce(ts, 'shake'); t = null; }
         busy = false; paint();
+        tries++; thinkLock(m, [target]);
+        if (tries >= 2) [...$$('button', cp), ...$$('button', vp)].forEach(b => b.classList.toggle('hint', [tc, tv, tt].includes(b.textContent)));
       }, 1300);
     }
   }
@@ -1307,7 +1339,8 @@ function blocks(mode = 'free') {
   if (ts) ts.onclick = () => { if (busy) return; if (t) { t = null; paint(); } };
   res.onclick = () => { if (c && v) { bounce(res); say(...blendParts(compose(c, v, t || ''))); } else if (target) say(target); };
   function newTarget() {
-    busy = false; c = v = t = null; bonus.innerHTML = '';
+    busy = false; c = v = t = null; bonus.innerHTML = ''; tries = 0;
+    $$('.pal button', m).forEach(b => b.classList.remove('hint'));
     const easyV = [...'ㅏㅓㅗㅜㅡㅣ'];
     let s; do {
       s = dm ? dmSyl()
@@ -1341,7 +1374,7 @@ function puzzle() {
     <button class="nextbtn hidden">다음 ▶</button></div>`);
   const slots = $$('.pslot', m), tiles = $$('.tile', m);
   const filled = syl.map(() => null);
-  let locked = false;
+  let locked = false, wrong = false;
   $('.pzpic', m).onclick = () => { bounce($('.pzpic', m)); say(x.w); };
   tiles.forEach(t => t.onclick = () => {
     if (locked || t.classList.contains('used')) return;
@@ -1360,7 +1393,8 @@ function puzzle() {
     if (made === x.w) {
       locked = true; slots.forEach(s => s.classList.add('good'));
       SFX.tada(); confetti(); say(x.w);
-      k.solved[x.w] = 1; save(); addStar($('.slots', m)); report('puzzle');
+      k.solved[x.w] = 1; save();
+      if (!wrong) { addStar($('.slots', m)); report('puzzle'); } else oops();
       const nb = $('.nextbtn', m); nb.classList.remove('hidden'); nb.onclick = () => go(puzzle);
     } else {
       SFX.no();
@@ -1370,7 +1404,7 @@ function puzzle() {
           setTimeout(() => { tiles[ti].classList.remove('used'); filled[i] = null; slots[i].textContent = ''; slots[i].classList.remove('full'); }, 550);
         }
       });
-      setTimeout(() => say(x.w), 700);
+      wrong = true; thinkLock($('.tiles', m), [x.w]);
     }
   }
   setTimeout(() => { bounce($('.pzpic', m)); say(x.w); }, 300);
@@ -1390,7 +1424,7 @@ function readQuiz() {
   $$('.rword button', m).forEach(b => b.onclick = () => {
     $$('.rword button', m).forEach(o => o.classList.remove('lit')); b.classList.add('lit'); bounce(b); say(b.textContent);
   });
-  let over = false;
+  let over = false, wrong = false;
   $$('.ch', m).forEach(b => b.onclick = () => {
     if (over) return;
     const o = opts[+b.dataset.i];
@@ -1398,10 +1432,12 @@ function readQuiz() {
       over = true; b.classList.add('good'); $$('.ch', m).forEach(e => { if (e !== b) e.classList.add('no'); });
       $$('.rword button', m).forEach(e => e.classList.add('lit'));
       SFX.tada(); confetti(); say(x.w);
-      k.read[x.w] = 1; save(); addStar(b); report('read');
+      k.read[x.w] = 1; save();
+      if (!wrong) { addStar(b); report('read'); } else oops();
       const nb = $('.nextbtn', m); nb.classList.remove('hidden'); nb.onclick = () => go(readQuiz);
     } else {
       SFX.no(); bounce(b, 'shake'); b.classList.add('no'); say(o.w);
+      wrong = true; thinkLock($('.choices', m));
     }
   });
 }
@@ -1426,12 +1462,12 @@ function balloons() {
   if (dm) lv.classList.add('hidden');
   m.append(lv, sky);
   const group = dm ? reviewSet() : GROUPS[k.bal].js;
-  let target = null, bl = [], raf = 0, last = 0, lock = false, prevT = '';
+  let target = null, bl = [], raf = 0, last = 0, lock = false, prevT = '', missed = false;
   const speed = () => sky.clientHeight / (kid === 'arin' ? 9 : 6.5);
   function announce() { const x = info(target); $('.say span', sky).textContent = x.e; say(phon(target), 350, x.w); }
   $('.say', sky).onclick = announce;
   function round() {
-    bl.forEach(b => b.el.remove()); bl = []; lock = false;
+    bl.forEach(b => b.el.remove()); bl = []; lock = false; missed = false;
     if (dm) { const f = group.includes(DM.letter) ? DM.letter : null; do target = f && Math.random() < .45 ? f : rnd(group); while (target === prevT && group.length > 1); }
     else { do target = rnd(group); while (target === prevT && group.length > 1); }
     prevT = target;
@@ -1460,9 +1496,13 @@ function balloons() {
         p.style.setProperty('--dx', Math.cos(a) * d + 'px'); p.style.setProperty('--dy', Math.sin(a) * d + 'px');
         sky.append(p); setTimeout(() => p.remove(), 800);
       }
-      say(phon(b.j)); addStar(b.el); report('balloon');
+      say(phon(b.j));
+      if (!missed) { addStar(b.el); report('balloon'); } else oops();
       setTimeout(round, 1500);
-    } else { SFX.no(); bounce(b.el, 'wob'); say(phon(b.j)); }
+    } else {
+      SFX.no(); bounce(b.el, 'wob'); say(phon(b.j));
+      missed = true; const x = info(target); thinkLock(sky, [phon(target), 350, x.w]);
+    }
   }
   function tick(t) {
     const dt = Math.min(.05, (t - (last || t)) / 1000); last = t;
@@ -1593,12 +1633,12 @@ function pickChar(maxTier) {
   const fresh = all.filter(x => !dex[x.id]);
   const x = rnd(fresh.length && Math.random() < .75 ? fresh : all); lastChar = x.id; return x;
 }
-function befriend(x, el) {
+function befriend(x, el, first = true) {
   const isNew = !K().dex[x.id];
   K().dex[x.id] = 1; save();
   bounce(el, 'dance'); SFX.tada(); confetti(30);
   say(x.n, 400, isNew ? '친구가 됐어!' : '또 만났네!');
-  addStar(el);
+  if (first) addStar(el); else oops();
 }
 function friends(tab = 'puzzle') {
   const name = kid === 'arin' ? '💖 티니핑 이름' : '🐾 포켓몬 이름';
@@ -1621,7 +1661,7 @@ function friends(tab = 'puzzle') {
     <button class="nextbtn hidden">다음 ▶</button></div>`);
   m.append(box);
   const pic = $('.charpic', box), slots = $$('.pslot', box), tiles = $$('.tile', box), filled = syl.map(() => null);
-  let locked = false;
+  let locked = false, wrong = false;
   const clearSlot = i => { slots[i].innerHTML = ghost ? `<i class="ghost">${syl[i]}</i>` : ''; slots[i].classList.remove('full'); filled[i] = null; };
   pic.onclick = () => { bounce(pic); say(x.n); };
   tiles.forEach(t => t.onclick = () => {
@@ -1635,12 +1675,12 @@ function friends(tab = 'puzzle') {
   function check() {
     if (filled.map(i => tilesData[i]).join('') === x.n) {
       locked = true; slots.forEach(s => s.classList.add('good'));
-      befriend(x, pic);
+      befriend(x, pic, !wrong);
       const nb = $('.nextbtn', box); nb.classList.remove('hidden'); nb.onclick = () => go(friends, 'puzzle');
     } else {
       SFX.no();
       filled.forEach((ti, i) => { if (tilesData[ti] !== syl[i]) { bounce(slots[i], 'shake'); setTimeout(() => { tiles[ti].classList.remove('used'); clearSlot(i); }, 550); } });
-      setTimeout(() => say(x.n), 700);
+      wrong = true; thinkLock($('.tiles', box), [x.n]);
     }
   }
   setTimeout(() => { bounce(pic); say(x.n); }, 300);
@@ -1654,16 +1694,16 @@ function friendsRead(m) {
     <button class="nextbtn hidden">다음 ▶</button></div>`);
   m.append(box);
   $$('.rword button', box).forEach(b => b.onclick = () => { $$('.rword button', box).forEach(o => o.classList.remove('lit')); b.classList.add('lit'); bounce(b); say(b.textContent); });
-  let over = false;
+  let over = false, wrong = false;
   $$('.ch', box).forEach(b => b.onclick = () => {
     if (over) return;
     const o = opts[+b.dataset.i];
     if (o === x) {
       over = true; b.classList.add('good'); $$('.ch', box).forEach(e => { if (e !== b) e.classList.add('no'); });
       $$('.rword button', box).forEach(e => e.classList.add('lit'));
-      befriend(x, b);
+      befriend(x, b, !wrong);
       const nb = $('.nextbtn', box); nb.classList.remove('hidden'); nb.onclick = () => go(friends, 'read');
-    } else { SFX.no(); bounce(b, 'shake'); b.classList.add('no'); say(o.n); }
+    } else { SFX.no(); bounce(b, 'shake'); b.classList.add('no'); say(o.n); wrong = true; thinkLock($('.choices', box)); }
   });
 }
 // 📒 도감: 친구가 된 캐릭터 모으기 (아직이면 까만 그림자)
@@ -1843,6 +1883,7 @@ function settings() {
       <li>🃏 <b>짝 맞추기</b>: 아린은 글자 ↔ 그림, 다빈은 낱말 ↔ 그림. 배운 것에서 나와요.</li>
       <li>📚 <b>그림책</b>: ⭐ 받침 없는 문장 4권, ⭐⭐ 받침 있는 문장 2권. 아린이는 페이지마다 읽어 줘요.</li>
       <li>🔥 <b>연속 출석</b>: 오늘의 한글을 7일 연속 끝내면 🏆 트로피 + ⭐ 5 + (방이 연결돼 있으면) 🪙 5개 더. 🏆 4개마다 방에 특별 알 (다빈 🌟 황금 알 = 전설의 포켓몬, 아린 👑 황금 하트 = 특별한 티니핑) — 주간 미션 황금 스티커 4개와 같은 속도.</li>
+      <li>🤔 <b>막 누르기 막기</b>: 틀리면 잠깐 생각 시간(눌러지지 않음)이 있고 문제를 다시 들려줘요. ⭐ 과 오늘의 미션 칸은 <b>한 번에 맞혔을 때만</b> 올라가요 (틀린 복습 문제는 나중에 다시 나와요). 글자 만들기는 두 번 틀리면 맞는 글자판이 반짝여요.</li>
       <li>별 10개마다 동물 스티커가 생겨요.</li>
     </ul>
     <h3>처음부터 다시</h3>
