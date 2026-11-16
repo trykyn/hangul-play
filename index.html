@@ -951,10 +951,11 @@ function dayDone() {
   if (d.done) return go(daily);
   d.done = true; k.log[d.date] = 1; save();
   const coin = giveCoin();
-  const st = streakOf(), big = st > 0 && st % 7 === 0, bonus = big && giveStreakBonus();
-  const coins = (coin ? 1 : 0) + (bonus ? 5 : 0);
+  const st = streakOf(), big = st > 0 && st % 7 === 0, bonus = big ? giveStreakBonus() : {};
+  const coins = (coin ? 1 : 0) + (bonus.coins ? 5 : 0), egg = !!bonus.egg;
   go(daily);
-  const ov = h(`<div class="ov"><div class="bigcard"><div style="font-size:46px">${big ? `🔥 ${st}일 연속!` : '오늘의 한글 끝!'}</div><div class="sticker">${big ? '🏆' : '🏅'}</div>
+  const ov = h(`<div class="ov"><div class="bigcard"><div style="font-size:46px">${big ? `🔥 ${st}일 연속!` : '오늘의 한글 끝!'}</div><div class="sticker">${egg ? (kid === 'arin' ? '👑' : '🌟') : big ? '🏆' : '🏅'}</div>
+    ${egg ? `<div class="coinline" style="background:#FFE9F4;box-shadow:0 4px 0 #F49AC1">${specialEggName()}${kid === 'arin' ? '가' : '이'} 방에 왔어요!</div>` : ''}
     <div style="font-size:28px;color:var(--soft)">⭐ +${big ? 8 : 3}${big ? ' · 🏆 트로피' : ''}</div>
     ${coins ? `<div class="coinline">🪙 +${coins} <small>${kid === 'arin' ? '티니핑' : '포켓몬'} 방에 쏙!</small></div>` : ''}
     <div class="row"><button class="gobig press">좋아! 👍</button></div></div></div>`);
@@ -962,7 +963,8 @@ function dayDone() {
   document.body.append(ov);
   SFX.tada(); confetti(60);
   if (coins) setTimeout(SFX.coin, 1500);
-  if (big) say(`${st}일 연속!`, 300, '큰 선물이야!');
+  if (egg) say(`${st}일 연속!`, 300, kid === 'arin' ? '황금 하트가 왔어!' : '황금 알이 왔어!', 300, '특별한 친구가 들어 있대!');
+  else if (big) say(`${st}일 연속!`, 300, '큰 선물이야!');
   else if (coin) say('오늘의 한글 끝!', 300, '정말 잘했어!', 300, '코인 하나!');
   else say('오늘의 한글 끝!', 300, '정말 잘했어!');
   Array.from({ length: big ? 8 : 3 }, (_, i) => i * 300).forEach(ms => setTimeout(() => addStar($('.sticker', ov)), 600 + ms));
@@ -1512,10 +1514,20 @@ function flushCoins() {
   if (!FB.user || !S.house || !S.coinQ.length) return;
   const F = FB.F, ref = F.doc(FB.db, 'households', S.house);
   for (const c of S.coinQ.splice(0)) {
-    F.updateDoc(ref, new F.FieldPath('kids', c.k, ROOM_FIELD, 'items', c.id || 'hangul-' + c.d), 'coin')
+    // 특별 알: 방의 주간 미션 황금 알과 같은 모양 {egg:'gold'} (포켓몬 = 황금 알, 티니핑 = 황금 하트)
+    const path = c.egg ? new F.FieldPath('kids', c.k, ROOM_FIELD, 'mons', c.id) : new F.FieldPath('kids', c.k, ROOM_FIELD, 'items', c.id || 'hangul-' + c.d);
+    F.updateDoc(ref, path, c.egg ? { egg: 'gold', f: 0, at: c.at || Date.now() } : 'coin')
+      .then(() => c.egg && eggToRoom(ref, c))
       .catch(e => { console.warn('coin', e); S.coinQ.push(c); save(); });
   }
   save();
+}
+// 방에 나온 친구가 6마리보다 적으면 새 알도 방에 꺼내 두기 (아니면 친구 목록에서 기다림)
+async function eggToRoom(ref, c) {
+  try {
+    const d = (await FB.F.getDoc(ref)).data() || {}, h = ((d.kids || {})[c.k] || {})[ROOM_FIELD]?.home;
+    if (Array.isArray(h) && h.length < 6 && !h.includes(c.id)) await FB.F.updateDoc(ref, new FB.F.FieldPath('kids', c.k, ROOM_FIELD, 'home'), [...h, c.id]);
+  } catch (e) { console.warn('egg home', e); }
 }
 // 연결돼 있으면 오늘 코인 1개 (인터넷이 없으면 기기에 모아 뒀다가 다음에 보냄)
 function giveCoin() {
@@ -1779,15 +1791,21 @@ function streakOf(k = kid) {
 }
 function streakEl() {
   const n = streakOf(), left = 7 - (n % 7);
-  return h(`<div class="streak">${n ? `🔥 <b>${n}일</b> 연속` : '🔥 오늘부터 시작!'} <small>· 🎁 큰 선물까지 ${left}일</small></div>`);
+  const t = (K().trophies || 0) % EGG_EVERY;
+  return h(`<div class="streak">${n ? `🔥 <b>${n}일</b> 연속` : '🔥 오늘부터 시작!'} <small>· 🎁 큰 선물까지 ${left}일 · 🏆 ${t}/${EGG_EVERY} → ${specialEggName()}</small></div>`);
 }
+// 7일마다 🏆 + 🪙 5, 🏆 4개마다(= 7일 연속 4번) 🌟 특별 알 — 주간 미션 황금 스티커 4개와 같은 속도
+const EGG_EVERY = 4;
+const specialEggName = () => kid === 'arin' ? '👑 황금 하트' : '🌟 황금 알';
 function giveStreakBonus() {
   const k = K(); k.trophies = (k.trophies || 0) + 1; save();
-  if (!S.house) return false;
+  const egg = k.trophies % EGG_EVERY === 0;
+  if (!S.house) return { coins: false, egg: false };
   const d = dayState().date;
   for (let i = 0; i < 5; i++) { const id = `hangul-streak-${d}-${i}`; if (!S.coinQ.some(c => c.id === id)) S.coinQ.push({ k: kid, d, id }); }
+  if (egg && !S.coinQ.some(c => c.id === `hangul-gold-${d}`)) S.coinQ.push({ k: kid, d, id: `hangul-gold-${d}`, egg: 1, at: Date.now() });
   save(); startFirebase().then(flushCoins);
-  return true;
+  return { coins: true, egg };
 }
 
 /* ───────── ⚙️ 부모 설정 ───────── */
@@ -1824,7 +1842,7 @@ function settings() {
       <li>🐾 <b>친구 이름</b>: 다빈은 포켓몬, 아린은 티니핑 이름으로 글자 조각 맞추기(아린은 빈칸에 글자 모양이 흐리게 보여요), 다빈은 이름 읽고 친구 찾기도. 맞히면 📒 도감에 모여요. 다빈이 이름은 배운 만큼 쉬운 것부터(받침 없는 이름 → 쌍자음·겹모음 → 받침).</li>
       <li>🃏 <b>짝 맞추기</b>: 아린은 글자 ↔ 그림, 다빈은 낱말 ↔ 그림. 배운 것에서 나와요.</li>
       <li>📚 <b>그림책</b>: ⭐ 받침 없는 문장 4권, ⭐⭐ 받침 있는 문장 2권. 아린이는 페이지마다 읽어 줘요.</li>
-      <li>🔥 <b>연속 출석</b>: 오늘의 한글을 7일 연속 끝내면 🏆 트로피 + ⭐ 5 + (방이 연결돼 있으면) 🪙 5개 더.</li>
+      <li>🔥 <b>연속 출석</b>: 오늘의 한글을 7일 연속 끝내면 🏆 트로피 + ⭐ 5 + (방이 연결돼 있으면) 🪙 5개 더. 🏆 4개마다 방에 특별 알 (다빈 🌟 황금 알 = 전설의 포켓몬, 아린 👑 황금 하트 = 특별한 티니핑) — 주간 미션 황금 스티커 4개와 같은 속도.</li>
       <li>별 10개마다 동물 스티커가 생겨요.</li>
     </ul>
     <h3>처음부터 다시</h3>
