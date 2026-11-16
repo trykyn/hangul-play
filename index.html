@@ -71,7 +71,9 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
 .acts{flex:1;width:100%;max-width:1100px;display:grid;gap:22px;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;min-height:0}
 .acts.n4{grid-template-columns:repeat(2,1fr);max-width:860px}
 .act{border-radius:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;box-shadow:0 8px 0 rgba(0,0,0,.09);min-height:0;position:relative;overflow:hidden}
-.act .ic{font-size:min(13vmin,104px);line-height:1.1}
+.act .ic{font-size:min(13vmin,104px);line-height:1;padding:4px 0}
+.act .tx{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.act .lb,.act .ex{white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .act .lb{font-size:min(4.6vmin,36px)}
 .act .ex{font-size:min(3.2vmin,24px);opacity:.75}
 .shelf{flex:none;display:flex;gap:6px;align-items:center;background:#fff;border-radius:999px;padding:8px 20px;box-shadow:0 4px 0 var(--line);font-size:30px;max-width:100%;overflow-x:auto}
@@ -133,7 +135,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
 .slot svg{width:90%;height:90%}
 .op{font-size:min(8vmin,60px);color:var(--soft)}
 .pal{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:1140px;flex:none}
-.pal button{width:min(9vmin,72px);height:min(9vmin,74px);border-radius:20px;background:#fff;font-size:min(6.4vmin,50px);box-shadow:0 5px 0 var(--line)}
+.pal button{width:min(9vmin,72px,calc((100vw - 150px) / 14));height:min(9vmin,74px,calc((100vw - 150px) / 14));border-radius:20px;background:#fff;font-size:min(6.4vmin,50px);box-shadow:0 5px 0 var(--line)}
 @media (orientation:portrait){.pal button{width:min(10.5vmin,86px);height:min(10.5vmin,86px)}}
 .pal.cp button{color:var(--c)}.pal.vp button{color:var(--v)}
 .pal button.on{background:var(--kid3);box-shadow:0 5px 0 var(--kid)}
@@ -258,10 +260,13 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
 
 /* 메뉴 칸이 많을 때 */
 .acts.n8{grid-template-columns:repeat(4,1fr);max-width:1140px}
-.acts.many{gap:16px}
-.acts.many .ic{font-size:min(9.5vmin,78px)}
+/* 칸이 많으면 그림 왼쪽 · 글씨 오른쪽 (칸 높이가 낮아도 안 잘리게) */
+.acts.many{gap:14px}
+.acts.many .act{flex-direction:row;justify-content:flex-start;gap:14px;padding:0 18px;border-radius:30px}
+.acts.many .ic{font-size:min(9vmin,70px)}
+.acts.many .tx{align-items:flex-start;flex:1}
 .acts.many .lb{font-size:min(4vmin,32px)}
-.acts.many .ex{font-size:min(2.7vmin,20px)}
+.acts.many .ex{font-size:min(2.5vmin,19px)}
 @media (orientation:portrait){.acts.n8{grid-template-columns:repeat(2,1fr)}}
 
 /* 🐾 친구 이름 */
@@ -310,6 +315,27 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
 .streak{font-size:26px;background:#fff;border-radius:999px;padding:6px 20px;box-shadow:0 4px 0 var(--line);flex:none}
 .streak b{font-weight:400;color:#E8590C}
 .streak small{font-size:20px;color:var(--soft)}
+
+/* 오늘의 한글: 달력+연속 한 줄, 시작 단추+내일 한 줄 (낮은 화면에서도 다 보이게) */
+.dfoot,.dgo{display:flex;align-items:center;justify-content:center;gap:12px 22px;flex-wrap:wrap;flex:none}
+@media (max-height:800px){
+  .dmain{gap:10px}
+  .dhero{padding:8px 28px}
+  .dhero .big{font-size:min(15vmin,120px)}
+  .dhero .em{font-size:min(11vmin,84px)}
+  .dhero .row5 button{font-size:min(7.5vmin,58px)}
+  .dhero .row5 button.gl{width:min(12vmin,96px);height:min(12vmin,96px)}
+  .dtask{padding:10px 8px 8px}
+  .dtask .ic{font-size:min(7.5vmin,58px)}
+  .week span{width:min(7vmin,52px);height:min(7vmin,52px)}
+  .gobig{font-size:38px;padding:8px 46px}
+}
+
+/* 포켓몬 ↔ 티니핑 */
+.cset{display:flex;gap:10px;flex:none}
+.cset button{display:flex;align-items:center;gap:6px;background:#fff;border-radius:999px;padding:4px 18px 4px 6px;font-size:24px;box-shadow:0 4px 0 var(--line);opacity:.6}
+.cset button.on{opacity:1;background:var(--kid3);box-shadow:0 4px 0 var(--kid)}
+.cset img{width:44px;height:44px;object-fit:contain}
 
 /* 🤔 생각 시간 */
 .think{pointer-events:none}
@@ -653,7 +679,7 @@ function home() {
 
 /* ───────── 아이별 메뉴 ───────── */
 const ACTS = {
-  friends: { ic: '🐾', t: '친구 이름', ex: '피카츄 · 하츄핑', bg: '#FFF0B8', fn: () => friends() },
+  friends: { ic: '🐾', t: '친구 이름', ex: '포켓몬 · 티니핑', bg: '#FFF0B8', fn: () => friends() },
   memory: { ic: '🃏', t: '짝 맞추기', ex: '카드 뒤집기', bg: '#DDF3FF', fn: () => memory() },
   books: { ic: '📚', t: '그림책', ex: '한 장씩 읽어요', bg: '#E9F7D6', fn: () => books() },
   review: { ic: '🔁', t: '복습', ex: '배운 것 섞어서', bg: '#FFE3F1', fn: () => review() },
@@ -680,7 +706,7 @@ function menu() {
   const grid = h(`<div class="acts ${ids.length === 4 ? 'n4' : ids.length === 8 ? 'n8 many' : ids.length > 6 ? 'many' : ''}"></div>`);
   ids.forEach(id => {
     const a = ACTS[id];
-    const b = h(`<button class="act press" style="background:${a.bg}"><div class="ic">${a.ic}</div><div class="lb">${a.t}</div><div class="ex">${a.ex}</div></button>`);
+    const b = h(`<button class="act press" style="background:${a.bg}"><div class="ic">${a.ic}</div><div class="tx"><div class="lb">${a.t}</div><div class="ex">${a.ex}</div></div></button>`);
     b.onclick = () => { SFX.tap(); say(a.t); go(a.fn); };
     grid.append(b);
   });
@@ -821,7 +847,9 @@ function daily() {
   const gb = next ? h(`<button class="gobig press">▶ ${any ? '이어서' : '시작'}</button>`) : h('<button class="gobig fin press">🏅 오늘 끝! 내일 또 만나요</button>');
   gb.onclick = () => next ? startTask(next.id) : (confetti(), say('오늘의 한글 끝! 내일 또 만나요'));
   const tmr = h(`<div class="tmr">내일 배울 것 ▶ <b>${lessonAt(d.lesson + 1).title}</b></div>`);
-  m.append(heroEl(l), tl, h(weekStrip()), streakEl(), gb, tmr);
+  const foot = h('<div class="dfoot"></div>'); foot.append(h(weekStrip()), streakEl());
+  const dgo = h('<div class="dgo"></div>'); dgo.append(gb, tmr);
+  m.append(heroEl(l), tl, foot, dgo);
   if (!next) say('오늘의 한글 끝! 내일 또 만나요');
   else if (!any) {
     if (l.kind === 'letter') say('오늘의 글자', 250, phon(l.hero), 400, info(l.hero).w);
@@ -1615,7 +1643,9 @@ function refreshLink() {
    그림은 우리가족 앱 폴더(../our-family/poke/art, ../our-family/ping)를 그대로 씀 */
 const POKE_NAMES = [[1,"이상해씨"],[2,"이상해풀"],[3,"이상해꽃"],[4,"파이리"],[5,"리자드"],[6,"리자몽"],[7,"꼬부기"],[8,"어니부기"],[9,"거북왕"],[10,"캐터피"],[11,"단데기"],[12,"버터플"],[13,"뿔충이"],[14,"딱충이"],[15,"독침붕"],[16,"구구"],[17,"피죤"],[18,"피죤투"],[19,"꼬렛"],[20,"레트라"],[21,"깨비참"],[22,"깨비드릴조"],[23,"아보"],[24,"아보크"],[25,"피카츄"],[26,"라이츄"],[27,"모래두지"],[28,"고지"],[30,"니드리나"],[31,"니드퀸"],[33,"니드리노"],[34,"니드킹"],[35,"삐삐"],[36,"픽시"],[37,"식스테일"],[38,"나인테일"],[39,"푸린"],[40,"푸크린"],[41,"주뱃"],[42,"골뱃"],[43,"뚜벅쵸"],[44,"냄새꼬"],[45,"라플레시아"],[46,"파라스"],[47,"파라섹트"],[48,"콘팡"],[49,"도나리"],[50,"디그다"],[51,"닥트리오"],[52,"나옹"],[53,"페르시온"],[54,"고라파덕"],[55,"골덕"],[56,"망키"],[57,"성원숭"],[58,"가디"],[59,"윈디"],[60,"발챙이"],[61,"슈륙챙이"],[62,"강챙이"],[63,"캐이시"],[64,"윤겔라"],[65,"후딘"],[66,"알통몬"],[67,"근육몬"],[68,"괴력몬"],[69,"모다피"],[70,"우츠동"],[71,"우츠보트"],[72,"왕눈해"],[73,"독파리"],[74,"꼬마돌"],[75,"데구리"],[76,"딱구리"],[77,"포니타"],[78,"날쌩마"],[79,"야돈"],[80,"야도란"],[81,"코일"],[82,"레어코일"],[83,"파오리"],[84,"두두"],[85,"두트리오"],[86,"쥬쥬"],[87,"쥬레곤"],[88,"질퍽이"],[89,"질뻐기"],[90,"셀러"],[91,"파르셀"],[92,"고오스"],[93,"고우스트"],[94,"팬텀"],[95,"롱스톤"],[96,"슬리프"],[97,"슬리퍼"],[98,"크랩"],[99,"킹크랩"],[100,"찌리리공"],[101,"붐볼"],[102,"아라리"],[103,"나시"],[104,"탕구리"],[105,"텅구리"],[106,"시라소몬"],[107,"홍수몬"],[108,"내루미"],[109,"또가스"],[110,"또도가스"],[111,"뿔카노"],[112,"코뿌리"],[113,"럭키"],[114,"덩쿠리"],[115,"캥카"],[116,"쏘드라"],[117,"시드라"],[118,"콘치"],[119,"왕콘치"],[120,"별가사리"],[121,"아쿠스타"],[122,"마임맨"],[123,"스라크"],[124,"루주라"],[125,"에레브"],[126,"마그마"],[127,"쁘사이저"],[128,"켄타로스"],[129,"잉어킹"],[130,"갸라도스"],[131,"라프라스"],[132,"메타몽"],[133,"이브이"],[134,"샤미드"],[135,"쥬피썬더"],[136,"부스터"],[137,"폴리곤"],[138,"암나이트"],[139,"암스타"],[140,"투구"],[141,"투구푸스"],[142,"프테라"],[143,"잠만보"],[144,"프리져"],[145,"썬더"],[146,"파이어"],[147,"미뇽"],[148,"신뇽"],[149,"망나뇽"],[150,"뮤츠"],[151,"뮤"]];
 const PING_NAMES = [["heartsping1","하츄핑"],["aloneping","홀로핑"],["artping","그림핑"],["auroraping","오로라핑"],["balletping","발레핑"],["bebeping","베베핑"],["blankping","깜빡핑"],["bonnyping","뽀니핑"],["buddyping","짝짝핑"],["chachaping","차차핑"],["charmping","아잉핑"],["claireping","아름핑"],["coolping","덜덜핑"],["cozyping","포근핑"],["curieping","모야핑"],["dadaping","바로핑"],["dajoping","다조핑"],["dareping","부투핑"],["dianaping","다이아나핑"],["dreamping","띠용핑"],["eclipseping","이클립스핑"],["egoping","앙대핑"],["floraping","플라핑"],["fluffyping","포실핑"],["freezeping","꽁꽁핑"],["giftping","주네핑"],["giggleping","악동핑"],["gogoping","아자핑"],["goodping","차캐핑"],["happying","해핑"],["heavyping","무거핑"],["jellyping","말랑핑"],["joahping","조아핑"],["kikiping","키키핑"],["ladyping","공쥬핑"],["lalaping","라라핑"],["luckyping","행운핑"],["luvping","바네핑"],["memoping","메모핑"],["mimicping","따라핑"],["moseyping","차나핑"],["nanaping","나나핑"],["narrping","나르핑"],["nonoping","시러핑"],["noraping","노라핑"],["noriping","노리핑"],["okeydokeyping","꾸래핑"],["onlyping","다해핑"],["oppoping","꺼꿀핑"],["owwping","아야핑"],["patping","토닥핑"],["princeping","왕자핑"],["roarping","화나핑"],["sculptping","뚝딱핑"],["shashaping","샤샤핑"],["shimmerping","빛나핑"],["shushping","똑똑핑"],["shyping","부끄핑"],["sighping","아휴핑"],["sleeping","코자핑"],["sparkleping","초롱핑"],["sparkping","찌릿핑"],["spookping","무셔핑"],["stickping","딱풀핑"],["sweetping","달콤핑"],["tangyping","새콤핑"],["teeheeping","방글핑"],["tickleping","까르핑"],["tidyping","싹싹핑"],["timidping","쪼꼼핑"],["toyping","토이핑"],["trueping","솔찌핑"],["trustping","믿어핑"],["tutuping","투투핑"],["tweetping","떠벌핑"],["twinkleping","빤짝핑"],["wannabeping","또까핑"],["weeping","주르핑"],["wishping","소원핑"],["wonderping","원더핑"],["yummyping","맛나핑"],["zipping","씽씽핑"]];
-const CHARS = () => kid === 'arin'
+// 아이마다 포켓몬/티니핑을 고를 수 있음 (처음엔 다빈 = 포켓몬, 아린 = 티니핑)
+const charSet = () => K().cset || (kid === 'arin' ? 'ping' : 'poke');
+const CHARS = () => charSet() === 'ping'
   ? PING_NAMES.map(([id, n]) => ({ id, n, img: `../our-family/ping/${id}.webp` }))
   : POKE_NAMES.map(([id, n]) => ({ id: String(id), n, img: `../our-family/poke/art/${id}.png` }));
 // 읽기 어려움: 1 = 기본 자음·모음만, 2 = 쌍자음·겹모음, 3 = 받침
@@ -1626,10 +1656,12 @@ function nameTier(w) {
 }
 // 다빈이가 배운 만큼: 새 모음·쌍자음 과(15과~)부터 2단계, 받침 과(22과~)부터 3단계
 const tierNow = () => { const n = dayState().lesson; return n >= 21 ? 3 : n >= 14 ? 2 : 1; };
-const charImg = (x, cls = '') => `<img class="cimg ${cls}" src="${x.img}" alt="" draggable="false" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'cimg-x',textContent:'${kid === 'arin' ? '💖' : '⚪'}'}))">`;
+const charImg = (x, cls = '') => `<img class="cimg ${cls}" src="${x.img}" alt="" draggable="false" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'cimg-x',textContent:'${charSet() === 'ping' ? '💖' : '⚪'}'}))">`;
 let lastChar = '';
 function pickChar(maxTier) {
-  const dex = K().dex, all = CHARS().filter(x => x.id !== lastChar && (!maxTier || nameTier(x.n) <= maxTier) && [...x.n].length <= 4);
+  const dex = K().dex, base = CHARS().filter(x => x.id !== lastChar && [...x.n].length <= 4);
+  let all = base.filter(x => !maxTier || nameTier(x.n) <= maxTier);
+  if (all.length < 3) all = base;
   const fresh = all.filter(x => !dex[x.id]);
   const x = rnd(fresh.length && Math.random() < .75 ? fresh : all); lastChar = x.id; return x;
 }
@@ -1641,9 +1673,17 @@ function befriend(x, el, first = true) {
   if (first) addStar(el); else oops();
 }
 function friends(tab = 'puzzle') {
-  const name = kid === 'arin' ? '💖 티니핑 이름' : '🐾 포켓몬 이름';
+  const name = charSet() === 'ping' ? '💖 티니핑 이름' : '🐾 포켓몬 이름';
   topbar(name, () => go(menu));
   const m = mainEl();
+  // 포켓몬 ↔ 티니핑 고르기
+  const SETS = [['poke', '../our-family/poke/art/25.png', '포켓몬'], ['ping', '../our-family/ping/heartsping1.webp', '티니핑']];
+  const pick = h(`<div class="cset">${SETS.map(([id, img, t]) => `<button class="press ${charSet() === id ? 'on' : ''}" data-s="${id}"><img src="${img}" alt="" draggable="false">${t}</button>`).join('')}</div>`);
+  $$('button', pick).forEach(b => b.onclick = () => {
+    if (b.dataset.s === charSet()) return;
+    K().cset = b.dataset.s; save(); SFX.tap(); say(b.textContent); go(friends, tab);
+  });
+  m.append(pick);
   const total = CHARS().length, got = Object.keys(K().dex).filter(id => CHARS().some(x => x.id === id)).length;
   const tabList = kid === 'arin' ? [['puzzle', '🧩 이름 맞추기'], ['dex', `📒 도감 ${got}/${total}`]]
     : [['puzzle', '🧩 이름 맞추기'], ['read', '📖 이름 읽기'], ['dex', `📒 도감 ${got}/${total}`]];
