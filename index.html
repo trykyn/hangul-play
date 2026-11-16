@@ -244,6 +244,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
 
 /* 받침 칸, 글자 많은 판 */
 .slot.ts{color:var(--t);font-size:min(6vmin,40px)}
+.slot.ts:not(.full){opacity:.7}
 .slot.ts.full{border-color:var(--t3);font-size:min(14vmin,110px)}
 .slot.ts.ask{border-color:var(--t);animation:pulse 1.2s infinite}
 .jm .slot{width:min(17vmin,140px);height:min(17vmin,140px);font-size:min(12vmin,96px)}
@@ -322,6 +323,8 @@ const WORDS = `나무🌳 바나나🍌 사자🦁 오리🦆 기차🚂 나비�
 });
 const ONE = Object.fromEntries(WORDS.filter(x => x.n === 1).map(x => [x.w, x.e]));
 Object.assign(ONE, { 나: '🙋', 표: '🎫', 파: '🧅' });
+// 받침 있는 한 글자 낱말 (글자 만들기에서 만들면 그림이 나옴)
+const JONG1 = Object.fromEntries('눈⛄ 산⛰️ 문🚪 손✋ 돈💰 공⚽ 빵🍞 용🐉 콩🫘 양🐑 곰🐻 봄🌸 밤🌰 뱀🐍 잠😴 춤💃 꿈💭 금🥇 달🌙 별⭐ 물💧 발🦶 말🐴 불🔥 풀🌿 귤🍊 굴🦪 책📚 약💊 떡🍡 국🍲 밥🍚 집🏠 입👄 컵🥤 톱🪚 옷👕 붓🖌️ 빗🪮 꽃🌼 숲🌳 코🐽'.split(' ').map(t => [t.match(/^[가-힣]+/)[0], t.replace(/^[가-힣]+/, '')]).filter(([w]) => w.length === 1 && decompose(w)[2]));
 
 const GROUPS = [
   { t: 'ㄱㄴㄷㄹㅁ', js: 'ㄱㄴㄷㄹㅁ' }, { t: 'ㅂㅅㅇㅈㅊ', js: 'ㅂㅅㅇㅈㅊ' }, { t: 'ㅋㅌㅍㅎ', js: 'ㅋㅌㅍㅎ' },
@@ -1169,13 +1172,14 @@ function traceWord(x, si = 0) {
 /* ───────── 🧱 글자 만들기: 자음 + 모음 (+ 받침) = 글자 ─────────
    배운 쌍자음·겹모음은 판에 더해지고, 받침을 배운 뒤에는 받침 칸이 생김 */
 const EXTRA_C = ['ㄲ', 'ㄸ', 'ㅃ', 'ㅆ', 'ㅉ'], EXTRA_V = ['ㅐ', 'ㅔ', 'ㅟ', 'ㅢ', 'ㅘ', 'ㅝ', 'ㅚ'];
-const oneWord = s => ONE[s] || (knownWords().find(x => x.w === s) || {}).e;
+const oneWord = s => ONE[s] || JONG1[s] || (knownWords().find(x => x.w === s) || {}).e;
 function blocks(mode = 'free') {
   const dm = isDM('build'); if (dm) mode = 'quiz';
   topbar('🧱 글자 만들기', () => go(menu));
   const m = mainEl();
   const L = learned(), know = new Set(L.letters.map(x => x.v));
-  const jongMode = kid === 'davin' && LESSONS().slice(0, L.today + 1).some(l => l.kind === 'jong');
+  // 마음대로 놀 때는 누구나 받침까지, 소리 듣고 만들기는 받침을 배운 뒤부터
+  const jongMode = mode === 'free' || kid === 'davin' && LESSONS().slice(0, L.today + 1).some(l => l.kind === 'jong');
   const cons = [...CJ, ...EXTRA_C.filter(j => know.has(j))], vows = [...VJ, ...EXTRA_V.filter(j => know.has(j))];
   if (jongMode || cons.length + vows.length > 24) m.classList.add('jm');
   if (!dm) m.append(tabs([['free', '🧱 마음대로'], ['quiz', '🎯 소리 듣고 만들기']], mode, t => go(blocks, t)));
@@ -1194,7 +1198,7 @@ function blocks(mode = 'free') {
     cs.textContent = c || ''; cs.classList.toggle('full', !!c);
     vs.textContent = v || ''; vs.classList.toggle('full', !!v);
     if (ts) {
-      ts.textContent = t || (c && v && (needT() || mode === 'free') ? '받침' : '');
+      ts.textContent = t || '받침';
       ts.classList.toggle('full', !!t); ts.classList.toggle('ask', !t && !!(c && v && needT()));
     }
     $$('button', cp).forEach(b => b.classList.toggle('on', b.textContent === c || b.textContent === t));
