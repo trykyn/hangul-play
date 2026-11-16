@@ -740,24 +740,25 @@ const ARIN_LESSONS = (() => {
   }
   return out;
 })();
-// 다빈: 자음 줄(가거고구기) 14과 → 새 모음 → 쌍자음 → 받침
+// 다빈: 자음 줄(가거고구기) 14과 → 쉬운 받침(ㄴㅇㅁㄹ) → ㅐㅔ → 받침 ㄱㅂㅅ → 겹모음 → 쌍자음
+// (그림책·이름에는 겹모음보다 받침이 훨씬 자주 나와서 받침을 먼저)
 const DAVIN_LESSONS = [
   ...CJ.map(c => ({ kind: 'row', title: `${c} 친구들`, hero: c, jamo: [c], syl: [...'ㅏㅓㅗㅜㅣ'].map(v => compose(c, v)), words: wordsWith(c) })),
   ...[
+    ['받침 ㄴ', 'ㄴ', '', 'ㄴ', '간 난 단 산 손 문 눈 돈', '눈⛄ 산⛰️ 문🚪 손✋ 돈💰 기린🦒 우산☂️ 라면🍜'],
+    ['받침 ㅇ', 'ㅇ', '', 'ㅇ', '강 공 방 상 종 콩 용 숭', '공⚽ 용🐉 양🐑 사탕🍬 강아지🐶 가방🎒 풍선🎈'],
+    ['받침 ㅁ', 'ㅁ', '', 'ㅁ', '감 남 밤 솜 곰 봄 숨 김', '곰🐻 엄마👩 봄🌸 사람🧍 컴퓨터💻'],
+    ['받침 ㄹ', 'ㄹ', '', 'ㄹ', '달 말 발 별 물 불 풀 길', '달🌙 별⭐ 물💧 발🦶 말🐴 불🔥 풀🌿 거울🪞'],
     ['ㅐ 애', 'ㅐ', 'ㅐ', '', '개 내 대 래 매 배 새 해', '개🐕 새🐦 배🍐 해☀️ 노래🎤 고래🐳 개미🐜 무지개🌈 대나무🎋'],
     ['ㅔ 에', 'ㅔ', 'ㅔ', '', '게 네 데 레 메 베 세 테', '게🦀 네모🟦 세모🔺 카메라📷 테니스🎾'],
-    ['ㅟ ㅢ', 'ㅟ', 'ㅟ ㅢ', '', '귀 쥐 뒤 위 의 희', '귀👂 쥐🐭 가위✂️ 바위🪨 의자🪑'],
-    ['ㅘ ㅝ ㅚ', 'ㅘ', 'ㅘ ㅝ ㅚ', '', '과 화 와 워 뇌 회', '사과🍎 화가🎨 과자🍘 샤워🚿 회사🏢'],
-    ['ㄲ 끄', 'ㄲ', 'ㄲ', '', '까 꺼 꼬 꾸 끼', '토끼🐰 도끼🪓 코끼리🐘'],
-    ['ㄸ ㅃ', 'ㅃ', 'ㄸ ㅃ', '', '따 또 뚜 빠 뽀 뿌', '아빠👨 오빠👦 뽀뽀💋 메뚜기🦗'],
-    ['ㅆ ㅉ', 'ㅆ', 'ㅆ ㅉ', '', '싸 쏘 쓰 씨 짜 쪼 찌', '쓰레기🗑️ 아저씨🧔 찌개🍲'],
-    ['받침 ㄴ', 'ㄴ', '', 'ㄴ', '간 난 단 산 손 문 눈 돈', '눈⛄ 산⛰️ 문🚪 손✋ 돈💰 기린🦒 우산☂️ 라면🍜'],
-    ['받침 ㅇ', 'ㅇ', '', 'ㅇ', '강 공 방 상 종 콩 빵 용', '공⚽ 빵🍞 용🐉 사탕🍬 강아지🐶 가방🎒 풍선🎈'],
-    ['받침 ㅁ', 'ㅁ', '', 'ㅁ', '감 남 밤 솜 곰 봄 숨 김', '곰🐻 엄마👩 봄🌸 사람🧍 컴퓨터💻'],
-    ['받침 ㄹ', 'ㄹ', '', 'ㄹ', '달 말 발 별 물 불 풀 길', '달🌙 별⭐ 물💧 발🦶 말🐴 불🔥 풀🌿 딸기🍓'],
-    ['받침 ㄱ', 'ㄱ', '', 'ㄱ', '각 국 박 복 약 책 떡 목', '책📚 약💊 수박🍉 떡🍡 악어🐊'],
+    ['받침 ㄱ', 'ㄱ', '', 'ㄱ', '각 국 박 복 약 책 북 목', '책📚 약💊 수박🍉 북🥁 악어🐊'],
     ['받침 ㅂ', 'ㅂ', '', 'ㅂ', '밥 집 입 컵 납 겁 톱 갑', '밥🍚 집🏠 입👄 컵🥤 톱🪚 지갑👛 김밥🍙'],
     ['받침 ㅅ', 'ㅅ', '', 'ㅅ', '옷 붓 빗 맛 낫 갓 솟 젓', '옷👕 붓🖌️ 버섯🍄 로봇🤖'],
+    ['ㅟ ㅢ', 'ㅟ', 'ㅟ ㅢ', '', '귀 쥐 뒤 위 의 희', '귀👂 쥐🐭 가위✂️ 바위🪨 의자🪑'],
+    ['ㅘ ㅝ ㅚ', 'ㅘ', 'ㅘ ㅝ ㅚ', '', '과 화 와 워 뇌 회', '사과🍎 화가🎨 과자🍘 샤워🚿 회사🏢 병원🏥'],
+    ['ㄲ 끄', 'ㄲ', 'ㄲ', '', '까 꺼 꼬 꾸 끼', '토끼🐰 도끼🪓 코끼리🐘'],
+    ['ㄸ ㅃ', 'ㅃ', 'ㄸ ㅃ', '', '따 또 뚜 빠 뽀 뿌', '아빠👨 오빠👦 뽀뽀💋 메뚜기🦗 빵🍞 딸기🍓 떡🍡'],
+    ['ㅆ ㅉ', 'ㅆ', 'ㅆ ㅉ', '', '싸 쏘 쓰 씨 짜 쪼 찌', '쓰레기🗑️ 아저씨🧔 찌개🍲 쌀🌾'],
   ].map(([title, hero, jamo, jong, syl, words]) => ({ kind: jong ? 'jong' : 'new', title, hero, jamo: jamo ? jamo.split(' ') : [], jong, syl: syl.split(' '), words: W2(words) })),
 ];
 const LESSONS = () => kid === 'arin' ? ARIN_LESSONS : DAVIN_LESSONS;
@@ -1648,19 +1649,18 @@ const charSet = () => K().cset || (kid === 'arin' ? 'ping' : 'poke');
 const CHARS = () => charSet() === 'ping'
   ? PING_NAMES.map(([id, n]) => ({ id, n, img: `../our-family/ping/${id}.webp` }))
   : POKE_NAMES.map(([id, n]) => ({ id: String(id), n, img: `../our-family/poke/art/${id}.png` }));
-// 읽기 어려움: 1 = 기본 자음·모음만, 2 = 쌍자음·겹모음, 3 = 받침
-function nameTier(w) {
-  let t = 1;
-  for (const s of w) { const [c, v, b] = decompose(s); if (b) t = 3; else if (!CJ.includes(c) || !VJ.includes(v)) t = Math.max(t, 2); }
-  return t;
+// 다빈이가 지금까지 배운 글자로만 된 이름인지 (기본 자음·모음 + 배운 새 모음·쌍자음·받침)
+function readableNow() {
+  const L = learned(), know = new Set(L.letters.map(x => x.v));
+  const jong = new Set(LESSONS().slice(0, L.today + 1).map(l => l.jong).filter(Boolean));
+  return w => [...w].every(s => { const [c, v, b] = decompose(s); return (CJ.includes(c) || know.has(c)) && (VJ.includes(v) || know.has(v)) && (!b || jong.has(b)); });
 }
-// 다빈이가 배운 만큼: 새 모음·쌍자음 과(15과~)부터 2단계, 받침 과(22과~)부터 3단계
-const tierNow = () => { const n = dayState().lesson; return n >= 21 ? 3 : n >= 14 ? 2 : 1; };
 const charImg = (x, cls = '') => `<img class="cimg ${cls}" src="${x.img}" alt="" draggable="false" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'cimg-x',textContent:'${charSet() === 'ping' ? '💖' : '⚪'}'}))">`;
 let lastChar = '';
-function pickChar(maxTier) {
+function pickChar(limit) {
   const dex = K().dex, base = CHARS().filter(x => x.id !== lastChar && [...x.n].length <= 4);
-  let all = base.filter(x => !maxTier || nameTier(x.n) <= maxTier);
+  const ok = limit ? readableNow() : null;
+  let all = ok ? base.filter(x => ok(x.n)) : base;
   if (all.length < 3) all = base;
   const fresh = all.filter(x => !dex[x.id]);
   const x = rnd(fresh.length && Math.random() < .75 ? fresh : all); lastChar = x.id; return x;
@@ -1691,7 +1691,7 @@ function friends(tab = 'puzzle') {
   if (tab === 'dex') return friendsDex(m);
   if (tab === 'read') return friendsRead(m);
   // 🧩 이름 맞추기: 그림을 보고 이름 조각 맞추기 (아린: 빈칸에 글자 모양이 흐리게 보임)
-  const x = pickChar(kid === 'arin' ? 0 : Math.random() < .8 ? tierNow() : 0);
+  const x = pickChar(kid === 'arin' ? 0 : Math.random() < .8 ? 1 : 0);
   const syl = [...x.n], ghost = kid === 'arin';
   const pool = [...new Set(CHARS().flatMap(y => [...y.n]))].filter(s => !syl.includes(s));
   const tilesData = shuffle([...syl, ...shuffle(pool).slice(0, kid === 'arin' ? 1 : 2)]);
@@ -1727,7 +1727,7 @@ function friends(tab = 'puzzle') {
 }
 // 📖 이름 읽기 (다빈): 이름을 읽고 맞는 친구 고르기
 function friendsRead(m) {
-  const x = pickChar(tierNow()), others = shuffle(CHARS().filter(y => y.id !== x.id)).slice(0, 2), opts = shuffle([x, ...others]);
+  const x = pickChar(1), others = shuffle(CHARS().filter(y => y.id !== x.id)).slice(0, 2), opts = shuffle([x, ...others]);
   const box = h(`<div class="rq"><div class="rword">${[...x.n].map(s => `<button>${s}</button>`).join('')}</div>
     <div class="hint">이름을 읽고 친구를 찾아요 · 글자를 누르면 소리가 나요</div>
     <div class="choices">${opts.map((o, i) => `<button class="ch chc press" data-i="${i}">${charImg(o)}</button>`).join('')}</div>
@@ -1917,7 +1917,7 @@ function settings() {
       <li>따라 쓰기: 초록 점에서 시작해 화살표 방향으로. 👀 은 쓰는 순서 보여 주기, 두 번 틀리면 저절로 보여 줘요. 아린이는 넉넉하게, 다빈이는 방향까지 봐요.</li>
       <li>📅 <b>오늘의 한글</b>: 매일 새로 배우기 + 🔁 지금까지 배운 것 섞어 복습. 다 하면 🏅 도장과 별 3개, 다음 날 새 과로 넘어가요.
         <br>아린 (36과): 글자 하나씩(ㄱ→ㄴ→ㅏ…) 배우다가 사이사이 '가 나'처럼 배운 글자를 합쳐 보는 날. 복습은 소리 듣고 글자 고르기, 그림 보고 첫 글자 고르기.
-        <br>다빈 (28과): ㄱ~ㅎ 자음 줄(가거고구기) 14과 → ㅐ ㅔ → ㅟ ㅢ → ㅘ ㅝ ㅚ → ㄲ → ㄸ ㅃ → ㅆ ㅉ → 받침 ㄴ ㅇ ㅁ ㄹ ㄱ ㅂ ㅅ. 복습은 소리 듣고 글자, 읽고 그림, 그림 보고 맞는 글씨 고르기(헷갈리는 글자로). 틀린 문제는 조금 뒤에 다시 나와요.
+        <br>다빈 (28과): ㄱ~ㅎ 자음 줄(가거고구기) 14과 → 받침 ㄴ ㅇ ㅁ ㄹ → ㅐ ㅔ → 받침 ㄱ ㅂ ㅅ → ㅟ ㅢ → ㅘ ㅝ ㅚ → ㄲ → ㄸ ㅃ → ㅆ ㅉ. 복습은 소리 듣고 글자, 읽고 그림, 그림 보고 맞는 글씨 고르기(헷갈리는 글자로). 틀린 문제는 조금 뒤에 다시 나와요.
         <br>끝까지 다 배우면 매일 복습하는 날이 돼요.</li>
       <li>🐾 <b>친구 이름</b>: 다빈은 포켓몬, 아린은 티니핑 이름으로 글자 조각 맞추기(아린은 빈칸에 글자 모양이 흐리게 보여요), 다빈은 이름 읽고 친구 찾기도. 맞히면 📒 도감에 모여요. 다빈이 이름은 배운 만큼 쉬운 것부터(받침 없는 이름 → 쌍자음·겹모음 → 받침).</li>
       <li>🃏 <b>짝 맞추기</b>: 아린은 글자 ↔ 그림, 다빈은 낱말 ↔ 그림. 배운 것에서 나와요.</li>
