@@ -17,7 +17,7 @@
 <style>
 :root{
   --bg:#FFF6E5; --ink:#4A3B2A; --soft:#9A8670; --line:#EFDFC6; --card:#fff;
-  --c:#3B82F6; --c3:#DCEBFF; --v:#EF5350; --v3:#FFE0DE; --ok:#2EBD6B;
+  --c:#3B82F6; --c3:#DCEBFF; --v:#EF5350; --v3:#FFE0DE; --t:#17A35B; --t3:#D9F5E4; --ok:#2EBD6B;
   --dav:#FFC83D; --dav2:#E9A400; --dav3:#FFF0BF;
   --ari:#F49AC1; --ari2:#C774E8; --ari3:#FCE3F0;
   --kid:var(--dav); --kid2:var(--dav2); --kid3:var(--dav3);
@@ -230,6 +230,28 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
 .gobig{background:var(--ok);color:#fff;border-radius:999px;font-size:46px;padding:12px 60px;box-shadow:0 7px 0 #1f9a55;flex:none}
 .gobig.fin{background:#fff;color:var(--ink);box-shadow:0 7px 0 var(--line);font-size:36px}
 
+.dhero .big.jong{font-size:min(7vmin,52px);color:var(--ink);display:flex;flex-direction:column;align-items:center;line-height:1}
+.dhero .big.jong span{font-size:min(15vmin,120px);color:var(--t)}
+.dhero .row5 button.gl{width:min(15vmin,120px);height:min(15vmin,120px);padding:8px}
+.dhero .row5 button.gl svg{width:100%;height:100%}
+.tmr{font-size:24px;color:var(--soft);flex:none}
+.tmr b{font-weight:400;color:var(--ink)}
+
+/* 복습 퀴즈 */
+.qtop{display:flex;flex-direction:column;align-items:center;gap:10px}
+.qbig{font-size:min(20vmin,150px);line-height:1.1;background:#fff;border-radius:44px;padding:6px 44px;box-shadow:0 8px 0 var(--line);min-width:min(30vmin,240px)}
+.ch.w{width:auto;min-width:min(22vmin,180px);padding:0 26px;font-size:min(9vmin,70px)}
+
+/* 받침 칸, 글자 많은 판 */
+.slot.ts{color:var(--t);font-size:min(6vmin,40px)}
+.slot.ts.full{border-color:var(--t3);font-size:min(14vmin,110px)}
+.slot.ts.ask{border-color:var(--t);animation:pulse 1.2s infinite}
+.jm .slot{width:min(17vmin,140px);height:min(17vmin,140px);font-size:min(12vmin,96px)}
+.jm .slot.res{width:min(21vmin,175px);height:min(21vmin,175px)}
+.jm .slot.ts:not(.full){font-size:min(5vmin,34px)}
+.jm .pal button{width:min(7.6vmin,62px);height:min(7.6vmin,62px);font-size:min(5.4vmin,42px);border-radius:16px}
+.jm .bonus{height:min(8vmin,60px)}
+
 /* settings */
 .sheet{background:#fff;border-radius:34px;padding:26px 30px;width:min(94vw,680px);max-height:90vh;overflow-y:auto;font-family:system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;font-size:18px;line-height:1.5;user-select:text;-webkit-user-select:text}
 .sheet h2{font-family:var(--font);font-weight:400;font-size:30px;margin:0 0 8px}
@@ -259,8 +281,10 @@ const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { c
 /* ───────── 한글 조합 ───────── */
 const CH = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ'.split('');
 const JU = 'ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ'.split('');
-const compose = (c, v) => String.fromCharCode(0xAC00 + (CH.indexOf(c) * 21 + JU.indexOf(v)) * 28);
-const decompose = s => { const n = s.charCodeAt(0) - 0xAC00; return [CH[Math.floor(n / 588)], JU[Math.floor((n % 588) / 28)], n % 28]; };
+const JONG = ['', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+const compose = (c, v, t = '') => String.fromCharCode(0xAC00 + (CH.indexOf(c) * 21 + JU.indexOf(v)) * 28 + JONG.indexOf(t));
+// [첫 자음, 모음, 받침('' = 없음)]
+const decompose = s => { const n = s.charCodeAt(0) - 0xAC00; return [CH[Math.floor(n / 588)], JU[Math.floor((n % 588) / 28)], JONG[n % 28]]; };
 
 /* ───────── 글자 자료 ───────── */
 const CONS = [
@@ -279,7 +303,7 @@ const VOWS = [
   { j: 'ㅣ', w: '이', e: '🦷' },
 ];
 const CJ = CONS.map(x => x.j), VJ = VOWS.map(x => x.j);
-const isCons = j => CJ.includes(j);
+const isCons = j => CH.includes(j);
 const info = j => CONS.find(x => x.j === j) || VOWS.find(x => x.j === j);
 // 파닉스 소리: 자음은 'ㅡ'를 붙여서(그, 느, 드…), 모음은 'ㅇ'을 붙여서(아, 야…)
 const phon = j => isCons(j) ? compose(j, 'ㅡ') : compose('ㅇ', j);
@@ -335,20 +359,69 @@ function xform(strokes, t) {
     : s.map(([x, y]) => [t.dx + x * t.sx, t.dy + y * t.sy]));
 }
 const ID = { sx: 1, sy: 1, dx: 0, dy: 0 };
+// 겹모음 (ㅘ·ㅚ·ㅝ·ㅟ·ㅢ 는 아래쪽 가로획을 낮게 — 위 자음과 안 겹치게)
+Object.assign(STROKES, {
+  'ㅐ': [[[34, 10], [34, 90]], [[34, 50], [68, 50]], [[68, 10], [68, 90]]],
+  'ㅒ': [[[34, 10], [34, 90]], [[34, 38], [68, 38]], [[34, 62], [68, 62]], [[68, 10], [68, 90]]],
+  'ㅔ': [[[24, 50], [46, 50]], [[46, 10], [46, 90]], [[70, 10], [70, 90]]],
+  'ㅖ': [[[24, 38], [46, 38]], [[24, 62], [46, 62]], [[46, 10], [46, 90]], [[70, 10], [70, 90]]],
+  'ㅘ': [[[30, 56], [30, 72]], [[6, 72], [54, 72]], [[68, 10], [68, 90]], [[68, 48], [90, 48]]],
+  'ㅚ': [[[34, 56], [34, 72]], [[6, 72], [62, 72]], [[80, 10], [80, 90]]],
+  'ㅝ': [[[6, 56], [52, 56]], [[30, 56], [30, 84]], [[58, 36], [74, 36]], [[74, 10], [74, 90]]],
+  'ㅟ': [[[6, 56], [62, 56]], [[34, 56], [34, 84]], [[80, 10], [80, 90]]],
+  'ㅢ': [[[6, 66], [62, 66]], [[80, 10], [80, 90]]],
+});
+// 상자에 맞춰 늘이기/줄이기 (동그라미는 동그랗게 유지)
+function bboxOf(strokes) {
+  const a = [1e9, -1e9, 1e9, -1e9];
+  for (const s of strokes) for (const [x, y] of (s.o ? [[s.o[0] - s.o[2], s.o[1] - s.o[2]], [s.o[0] + s.o[2], s.o[1] + s.o[2]]] : s)) {
+    a[0] = Math.min(a[0], x); a[1] = Math.max(a[1], x); a[2] = Math.min(a[2], y); a[3] = Math.max(a[3], y);
+  }
+  return a;
+}
+function fitBox(strokes, [X0, X1, Y0, Y1]) {
+  const [x0, x1, y0, y1] = bboxOf(strokes);
+  const sx = x1 - x0 > .5 ? (X1 - X0) / (x1 - x0) : 0, sy = y1 - y0 > .5 ? (Y1 - Y0) / (y1 - y0) : 0;
+  const mx = p => sx ? X0 + (p - x0) * sx : (X0 + X1) / 2, my = p => sy ? Y0 + (p - y0) * sy : (Y0 + Y1) / 2;
+  const r = Math.min(sx || sy, sy || sx);
+  return strokes.map(s => s.o ? circlePts(mx(s.o[0]), my(s.o[1]), s.o[2] * r) : s.map(([x, y]) => [mx(x), my(y)]));
+}
+// 쌍자음 = 같은 자음 두 개를 나란히
+for (const [d, s] of [['ㄲ', 'ㄱ'], ['ㄸ', 'ㄷ'], ['ㅃ', 'ㅂ'], ['ㅆ', 'ㅅ'], ['ㅉ', 'ㅈ']]) STROKES[d] = [...fitBox(STROKES[s], [10, 44, 18, 84]), ...fitBox(STROKES[s], [56, 90, 18, 84])];
 const jamoStrokes = j => xform(STROKES[j], ID);
-// 받침 없는 글자 → 자음 획 + 모음 획 (자음 먼저)
+// 글자 모양별 자리 (획 굵기 8을 생각해서 칸 사이를 띄움): [x0, x1, y0, y1]
+const V_RIGHT = 'ㅏㅑㅐㅒ', V_LEFT = 'ㅓㅕㅔㅖ', V_DOWN = 'ㅗㅛ', V_UP = 'ㅜㅠ';
+function boxes(c, v, t) {
+  const wide = 'ㅐㅒㅔㅖ'.includes(v);
+  if (!t) {
+    if (v === 'ㅣ') return { C: [10, 50, 20, 80], V: [66, 66, 8, 92] };
+    if (V_RIGHT.includes(v)) return { C: [8, wide ? 38 : 46, 20, 80], V: wide ? [50, 90, 8, 92] : [58, 88, 8, 92] };
+    if (V_LEFT.includes(v)) return { C: [8, wide ? 33 : 40, 20, 80], V: wide ? [46, 90, 8, 92] : [52, 84, 8, 92] };
+    if (V_DOWN.includes(v)) return { C: [24, 76, 8, 46], V: [8, 92, 58, 80] };
+    if (V_UP.includes(v)) return { C: [24, 76, 8, 44], V: [8, 92, 56, 90] };
+    if (v === 'ㅡ') return { C: [24, 76, 10, 54], V: [8, 92, 70, 70] };
+    return { C: [10, v === 'ㅝ' ? 44 : 52, 8, 44], V: [6, 92, 8, 92] };          // ㅘ ㅚ ㅝ ㅟ ㅢ
+  }
+  const T = [22, 78, 70, 92];
+  if (v === 'ㅣ') return { C: [12, 50, 8, 52], V: [66, 66, 6, 58], T };
+  if (V_RIGHT.includes(v)) return { C: [8, wide ? 38 : 44, 8, 52], V: wide ? [50, 90, 6, 58] : [56, 88, 6, 58], T };
+  if (V_LEFT.includes(v)) return { C: [8, wide ? 33 : 38, 8, 52], V: wide ? [46, 90, 6, 58] : [50, 84, 6, 58], T };
+  if (V_DOWN.includes(v)) return { C: [28, 72, 6, 28], V: [10, 90, 38, 54], T: [24, 76, 64, 92] };
+  if (V_UP.includes(v)) return { C: [28, 72, 6, 30], V: [10, 90, 40, 58], T: [24, 76, 68, 92] };
+  if (v === 'ㅡ') return { C: [28, 72, 6, 36], V: [10, 90, 48, 48], T: [24, 76, 62, 92] };
+  return { C: [10, 46, 4, 30], V: [6, 92, 4, 60], T: [22, 78, 72, 94] };
+}
+// 글자 하나 → 첫 자음 / 모음 / 받침 획 (쓰는 순서대로)
 function sylStrokes(s) {
-  const [c, v] = decompose(s);
-  const vert = 'ㅏㅑㅓㅕㅣ'.includes(v);
-  const tc = vert ? { sx: .52, sy: .72, dx: 6, dy: 14 } : { sx: .6, sy: .58, dx: 20, dy: 2 };
-  const tv = vert ? { sx: .6, sy: .92, dx: 34, dy: 4 } : { sx: .92, sy: .7, dx: 4, dy: 28 };
-  return { c: xform(STROKES[c], tc), v: xform(STROKES[v], tv) };
+  const [c, v, t] = decompose(s), b = boxes(c, v, t);
+  return { c: fitBox(STROKES[c], b.C), v: fitBox(STROKES[v], b.V), t: t ? fitBox(STROKES[t], b.T) : [] };
 }
 const pathD = p => 'M' + p.map(q => q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join('L');
-function glyphSVG(s, w = 8) {
-  const { c, v } = sylStrokes(s);
+function glyphSVG(s, w) {
+  const { c, v, t } = sylStrokes(s); w = w || (t.length ? 6.5 : 7.5);
+  const P = (arr, col) => arr.map(p => `<path d="${pathD(p)}" stroke="${col}"/>`).join('');
   return `<svg viewBox="0 0 100 100"><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="${w}">` +
-    c.map(p => `<path d="${pathD(p)}" stroke="var(--c)"/>`).join('') + v.map(p => `<path d="${pathD(p)}" stroke="var(--v)"/>`).join('') + '</g></svg>';
+    P(c, 'var(--c)') + P(v, 'var(--v)') + P(t, 'var(--t)') + '</g></svg>';
 }
 
 /* ───────── 저장 ───────── */
@@ -489,6 +562,7 @@ function home() {
 
 /* ───────── 아이별 메뉴 ───────── */
 const ACTS = {
+  review: { ic: '🔁', t: '복습', ex: '배운 것 섞어서', bg: '#FFE3F1', fn: () => review() },
   cards: { ic: '🔊', t: '소리 카드', ex: 'ㄱ 그 · 기차', bg: '#CFE8FF', fn: () => cards() },
   trace: { ic: '✏️', t: '따라 쓰기', ex: '손가락으로 써요', bg: '#D3F5D9', fn: () => tracePick() },
   balloon: { ic: '🎈', t: '풍선 놀이', ex: '소리 듣고 톡!', bg: '#FFDADA', fn: () => balloons() },
@@ -496,7 +570,7 @@ const ACTS = {
   puzzle: { ic: '🧩', t: '낱말 퍼즐', ex: '바 + 나 + 나', bg: '#E6DCFF', fn: () => puzzle() },
   read: { ic: '📖', t: '읽고 찾기', ex: '읽고 그림 톡!', bg: '#D3F3EE', fn: () => readQuiz() },
 };
-const MENU = { davin: ['blocks', 'puzzle', 'read', 'trace', 'cards', 'balloon'], arin: ['cards', 'trace', 'balloon', 'blocks'] };
+const MENU = { davin: ['review', 'blocks', 'puzzle', 'read', 'trace', 'balloon'], arin: ['review', 'cards', 'trace', 'balloon', 'blocks'] };
 function menu() {
   DM = null;
   document.body.className = kid;
@@ -504,7 +578,7 @@ function menu() {
   const m = mainEl();
   const d = dayState(), tasks = dailyTasks(), all = tasks.every(t => (d.prog[t.id] || 0) >= t.n);
   const ban = h(`<button class="daily-banner press ${all ? 'done' : ''}"><span class="db-ic">${all ? '🏅' : '📅'}</span>
-    <div class="db-t"><b>오늘의 한글</b><small>${lessonLetter(d)} · ${d.lesson + 1}번째 날</small></div>
+    <div class="db-t"><b>오늘의 한글</b><small>${curLesson(d).title} · ${d.lesson + 1}번째 날</small></div>
     <div class="db-dots">${tasks.map(t => (d.prog[t.id] || 0) >= t.n ? '✅' : `<span class="db-o">${t.ic}</span>`).join('')}</div></button>`);
   ban.onclick = () => { SFX.tap(); go(daily); };
   m.append(ban);
@@ -522,26 +596,91 @@ function menu() {
 }
 
 /* ───────── 📅 오늘의 한글: 매일 미션 ─────────
-   하루에 한 글자씩. 그날 미션을 다 끝내야 다음 날 새 글자로 넘어감(빠진 날은 같은 글자를 다시). */
-const ARIN_ORDER = [...'ㄱㄴㅏㄷㅓㄹㅗㅁㅜㅂㅡㅅㅣㅇㅈㅊㅑㅋㅕㅌㅛㅍㅠㅎ'];
-const ORDER = () => kid === 'arin' ? ARIN_ORDER : CJ;
+   하루에 한 과씩: 새로 배우기 + 지금까지 배운 것 섞어 복습.
+   그날 미션을 다 끝내야 다음 날 새 과로 넘어감(빠진 날은 같은 과를 다시). */
 const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 let DM = null;   // 지금 하는 미션 {id, letter, finished}
+const W2 = s => s.split(/\s+/).filter(Boolean).map(t => { const m = t.match(/^([가-힣]+)(.+)$/); return { w: m[1], e: m[2], n: m[1].length }; });
+const wordsWith = c => WORDS.filter(x => [...x.w].some(s => decompose(s)[0] === c));
+// 아린: 글자 하나씩 배우고, '+' 날에는 그동안 배운 글자를 합쳐 글자 만들기
+const ARIN_SEQ = 'ㄱ ㄴ ㅏ + ㄷ ㅓ + ㄹ ㅗ + ㅁ ㅜ + ㅂ ㅡ + ㅅ ㅣ + ㅇ ㅈ + ㅊ ㅑ + ㅋ ㅕ + ㅌ ㅛ + ㅍ ㅠ + ㅎ +'.split(' ');
+const FREQ = '나가고기이자차코소비파표하호도두무오우아어거너더모마바사지구누부수주치피키토티후히요유야여교라로리러루드그느스츠크트프흐';
+const ARIN_LESSONS = (() => {
+  const out = [], kc = [], kv = []; let fresh = [];
+  for (const tok of ARIN_SEQ) {
+    if (tok !== '+') { out.push({ kind: 'letter', title: tok, hero: tok, jamo: [tok], syl: [], words: [] }); (isCons(tok) ? kc : kv).push(tok); fresh.push(tok); continue; }
+    const cands = []; kc.forEach(c => kv.forEach(v => { if (fresh.includes(c) || fresh.includes(v)) cands.push(compose(c, v)); }));
+    // 자주 쓰는 글자부터, 새로 배운 글자마다 하나는 꼭 들어가게
+    const rank = s => (ONE[s] ? -100 : 0) + (FREQ.indexOf(s) < 0 ? 99 : FREQ.indexOf(s));
+    cands.sort((a, b) => rank(a) - rank(b));
+    const syl = [];
+    fresh.forEach(f => { const s = cands.find(s => decompose(s).includes(f) && !syl.includes(s)); if (s) syl.push(s); });
+    cands.forEach(s => { if (syl.length < 4 && !syl.includes(s)) syl.push(s); });
+    out.push({ kind: 'combo', title: syl.join(' '), jamo: [], syl, words: [] }); fresh = [];
+  }
+  return out;
+})();
+// 다빈: 자음 줄(가거고구기) 14과 → 새 모음 → 쌍자음 → 받침
+const DAVIN_LESSONS = [
+  ...CJ.map(c => ({ kind: 'row', title: `${c} 친구들`, hero: c, jamo: [c], syl: [...'ㅏㅓㅗㅜㅣ'].map(v => compose(c, v)), words: wordsWith(c) })),
+  ...[
+    ['ㅐ 애', 'ㅐ', 'ㅐ', '', '개 내 대 래 매 배 새 해', '개🐕 새🐦 배🍐 해☀️ 노래🎤 고래🐳 개미🐜 무지개🌈 대나무🎋'],
+    ['ㅔ 에', 'ㅔ', 'ㅔ', '', '게 네 데 레 메 베 세 테', '게🦀 네모🟦 세모🔺 카메라📷 테니스🎾'],
+    ['ㅟ ㅢ', 'ㅟ', 'ㅟ ㅢ', '', '귀 쥐 뒤 위 의 희', '귀👂 쥐🐭 가위✂️ 바위🪨 의자🪑'],
+    ['ㅘ ㅝ ㅚ', 'ㅘ', 'ㅘ ㅝ ㅚ', '', '과 화 와 워 뇌 회', '사과🍎 화가🎨 과자🍘 샤워🚿 회사🏢'],
+    ['ㄲ 끄', 'ㄲ', 'ㄲ', '', '까 꺼 꼬 꾸 끼', '토끼🐰 도끼🪓 코끼리🐘'],
+    ['ㄸ ㅃ', 'ㅃ', 'ㄸ ㅃ', '', '따 또 뚜 빠 뽀 뿌', '아빠👨 오빠👦 뽀뽀💋 메뚜기🦗'],
+    ['ㅆ ㅉ', 'ㅆ', 'ㅆ ㅉ', '', '싸 쏘 쓰 씨 짜 쪼 찌', '쓰레기🗑️ 아저씨🧔 찌개🍲'],
+    ['받침 ㄴ', 'ㄴ', '', 'ㄴ', '간 난 단 산 손 문 눈 돈', '눈⛄ 산⛰️ 문🚪 손✋ 돈💰 기린🦒 우산☂️ 라면🍜'],
+    ['받침 ㅇ', 'ㅇ', '', 'ㅇ', '강 공 방 상 종 콩 빵 용', '공⚽ 빵🍞 용🐉 사탕🍬 강아지🐶 가방🎒 풍선🎈'],
+    ['받침 ㅁ', 'ㅁ', '', 'ㅁ', '감 남 밤 솜 곰 봄 숨 김', '곰🐻 엄마👩 봄🌸 사람🧍 컴퓨터💻'],
+    ['받침 ㄹ', 'ㄹ', '', 'ㄹ', '달 말 발 별 물 불 풀 길', '달🌙 별⭐ 물💧 발🦶 말🐴 불🔥 풀🌿 딸기🍓'],
+    ['받침 ㄱ', 'ㄱ', '', 'ㄱ', '각 국 박 복 약 책 떡 목', '책📚 약💊 수박🍉 떡🍡 악어🐊'],
+    ['받침 ㅂ', 'ㅂ', '', 'ㅂ', '밥 집 입 컵 납 겁 톱 갑', '밥🍚 집🏠 입👄 컵🥤 톱🪚 지갑👛 김밥🍙'],
+    ['받침 ㅅ', 'ㅅ', '', 'ㅅ', '옷 붓 빗 맛 낫 갓 솟 젓', '옷👕 붓🖌️ 버섯🍄 로봇🤖'],
+  ].map(([title, hero, jamo, jong, syl, words]) => ({ kind: jong ? 'jong' : 'new', title, hero, jamo: jamo ? jamo.split(' ') : [], jong, syl: syl.split(' '), words: W2(words) })),
+];
+const LESSONS = () => kid === 'arin' ? ARIN_LESSONS : DAVIN_LESSONS;
+const REVIEW_DAY = { kind: 'review', title: '🔁 복습하는 날', jamo: [], syl: [], words: [] };
+const lessonAt = i => LESSONS()[i] || REVIEW_DAY;
 function dayState() {
   const k = K(), t = dayKey();
   if (!k.dm || k.dm.date !== t) { const p = k.dm; k.dm = { date: t, lesson: p ? p.lesson + (p.done ? 1 : 0) : 0, prog: {}, done: false }; save(); }
   return k.dm;
 }
-const lessonLetter = (d = dayState()) => ORDER()[d.lesson % ORDER().length];
-function dailyTasks() {
-  const L = lessonLetter();
-  return kid === 'arin'
-    ? [{ id: 'card', ic: '🔊', t: '오늘의 글자', n: 1 }, { id: 'trace', ic: '✏️', t: '두 번 쓰기', n: 2 }, { id: 'balloon', ic: '🎈', t: '풍선 톡톡', n: 5 }]
-    : [{ id: 'build', ic: '🧱', t: `${L} 글자 만들기`, n: 4 }, { id: 'read', ic: '📖', t: '읽고 찾기', n: 3 }, { id: 'puzzle', ic: '🧩', t: '낱말 퍼즐', n: 2 }, { id: 'wtrace', ic: '✏️', t: '낱말 쓰기', n: 1 }];
+const curLesson = (d = dayState()) => lessonAt(d.lesson);
+// 지금까지 배운 것 (i = 몇 번째 과에서 배웠는지)
+function learned() {
+  const n = dayState().lesson, Ls = LESSONS().slice(0, n + 1), letters = [], syl = [], words = [];
+  Ls.forEach((l, i) => { l.jamo.forEach(v => letters.push({ v, i })); l.syl.forEach(v => syl.push({ v, i })); l.words.forEach(v => words.push({ v, i })); });
+  return { letters, syl, words, today: n };
 }
-const wordsWith = c => WORDS.filter(x => [...x.w].some(s => decompose(s)[0] === c));
-// 아린 풍선: 오늘 글자 + 앞에서 배운 글자 4개
-const reviewSet = () => { const o = ORDER(), n = dayState().lesson % o.length; return o.slice(Math.max(0, n - 4), n + 1); };
+// 오늘 것 40%, 예전 것 60%
+function pickW(arr, today) {
+  if (!arr.length) return null;
+  const t = arr.filter(x => x.i === today), o = arr.filter(x => x.i !== today);
+  return rnd(t.length && (!o.length || Math.random() < .4) ? t : o).v;
+}
+// 다빈이가 지금까지 배운 낱말 + 받침 없는 기본 낱말 (자유 놀이용)
+function knownWords() {
+  if (kid !== 'davin') return WORDS;
+  const seen = new Set(WORDS.map(x => x.w)), out = WORDS.slice();
+  learned().words.forEach(({ v }) => { if (!seen.has(v.w)) { seen.add(v.w); out.push(v); } });
+  return out;
+}
+const T = (id, ic, t, n) => ({ id, ic, t, n });
+function dailyTasks() {
+  const l = curLesson();
+  if (kid === 'arin') {
+    if (l.kind === 'letter') return [T('card', '🔊', '새 글자', 1), T('trace', '✏️', '써 보기', 1), T('review', '🔁', '복습', 4), T('balloon', '🎈', '풍선 톡톡', 4)];
+    if (l.kind === 'combo') return [T('build', '🧱', '글자 합치기', Math.min(4, l.syl.length)), T('wtrace', '✏️', '써 보기', 1), T('review', '🔁', '복습', 4), T('balloon', '🎈', '풍선 톡톡', 4)];
+    return [T('review', '🔁', '복습', 6), T('balloon', '🎈', '풍선 톡톡', 5)];
+  }
+  if (l.kind === 'review') return [T('review', '🔁', '복습', 8), T('puzzle', '🧩', '낱말 퍼즐', 2)];
+  return [T('build', '🧱', '글자 만들기', 3), T('puzzle', '🧩', '낱말 퍼즐', 2), T('wtrace', '✏️', '낱말 쓰기', 1), T('review', '🔁', '복습', 6)];
+}
+// 아린 풍선: 지금까지 배운 글자 전부
+const reviewSet = () => [...new Set(learned().letters.map(x => x.v))];
 const isDM = id => DM && DM.id === id;
 function weekStrip() {
   const now = new Date(), wd = (now.getDay() + 6) % 7, mon = new Date(now); mon.setDate(now.getDate() - wd);
@@ -550,18 +689,32 @@ function weekStrip() {
     return `<div class="${i === wd ? 'today' : ''}"><span>${K().log[dayKey(d)] ? '🏅' : ''}</span>${n}</div>`;
   }).join('')}</div>`;
 }
+// 글자 하나 소리 내기: 받침 없으면 '그…아…가', 받침 있으면 '가…각'
+const blendParts = s => { const [c, v, t] = decompose(s); return t ? [compose(c, v), 350, s] : [phon(c), 250, phon(v), 400, s]; };
+function heroEl(l) {
+  if (l.kind === 'review') return h('<div class="dhero"><span class="em">🔁</span><span style="font-size:min(7vmin,52px)">지금까지 배운 것 모두!</span></div>');
+  if (l.kind === 'letter') {
+    const L = l.hero, x = info(L);
+    const el = h(`<div class="dhero"><button class="big ${isCons(L) ? '' : 'v'}">${L}</button><button class="em">${x.e}</button></div>`);
+    $('.big', el).onclick = () => { bounce($('.big', el)); say(phon(L), 350, x.w); };
+    $('.em', el).onclick = () => { bounce($('.em', el)); say(x.w); };
+    return el;
+  }
+  const combo = l.kind === 'combo';
+  const big = combo ? '' : l.kind === 'jong'
+    ? `<button class="big jong">받침<span>${l.hero}</span></button>`
+    : `<button class="big ${isCons(l.hero) ? '' : 'v'}">${l.hero}</button>`;
+  const el = h(`<div class="dhero">${big}<div class="row5">${l.syl.slice(0, combo ? 4 : 5).map(s => `<button class="${combo ? 'gl' : ''}">${combo ? glyphSVG(s) : s}</button>`).join('')}</div></div>`);
+  if ($('.big', el)) $('.big', el).onclick = () => { bounce($('.big', el)); say(...(l.kind === 'jong' ? l.syl.slice(0, 3).flatMap(s => [s, 300]) : [phon(l.hero), 300, l.syl[0]])); };
+  $$('.row5 button', el).forEach((b, i) => b.onclick = () => { bounce(b); say(...blendParts(l.syl[i])); });
+  return el;
+}
 function daily() {
   DM = null;
   document.body.className = kid;
   topbar('📅 오늘의 한글', () => go(menu));
-  const d = dayState(), L = lessonLetter(d), x = info(L), tasks = dailyTasks();
+  const d = dayState(), l = curLesson(d), tasks = dailyTasks();
   const m = mainEl(); m.classList.add('dmain');
-  const hero = kid === 'arin'
-    ? h(`<div class="dhero"><button class="big ${isCons(L) ? '' : 'v'}">${L}</button><button class="em">${x.e}</button></div>`)
-    : h(`<div class="dhero"><button class="big">${L}</button><div class="row5">${[...'ㅏㅓㅗㅜㅣ'].map(v => `<button>${compose(L, v)}</button>`).join('')}</div></div>`);
-  $('.big', hero).onclick = () => { bounce($('.big', hero)); say(phon(L), 350, x.w); };
-  if ($('.em', hero)) $('.em', hero).onclick = () => { bounce($('.em', hero)); say(x.w); };
-  $$('.row5 button', hero).forEach(b => b.onclick = () => { bounce(b); say(b.textContent); });
   const next = tasks.find(t => (d.prog[t.id] || 0) < t.n);
   const tl = h('<div class="dtasks"></div>');
   tasks.forEach(t => {
@@ -573,26 +726,141 @@ function daily() {
   const any = Object.keys(d.prog).length;
   const gb = next ? h(`<button class="gobig press">▶ ${any ? '이어서' : '시작'}</button>`) : h('<button class="gobig fin press">🏅 오늘 끝! 내일 또 만나요</button>');
   gb.onclick = () => next ? startTask(next.id) : (confetti(), say('오늘의 한글 끝! 내일 또 만나요'));
-  m.append(hero, tl, h(weekStrip()), gb);
+  const tmr = h(`<div class="tmr">내일 배울 것 ▶ <b>${lessonAt(d.lesson + 1).title}</b></div>`);
+  m.append(heroEl(l), tl, h(weekStrip()), gb, tmr);
   if (!next) say('오늘의 한글 끝! 내일 또 만나요');
-  else if (!any) say('오늘의 글자', 250, phon(L), 400, x.w);
+  else if (!any) {
+    if (l.kind === 'letter') say('오늘의 글자', 250, phon(l.hero), 400, info(l.hero).w);
+    else if (l.kind === 'review') say('오늘은 복습하는 날!');
+    else say('오늘 배울 글자', 300, ...l.syl.slice(0, 3).flatMap(s => [s, 250]));
+  }
 }
 function startTask(id) {
-  const d = dayState(), L = lessonLetter(d), t = dailyTasks().find(t => t.id === id);
-  DM = { id, letter: L, finished: (d.prog[id] || 0) >= t.n };
+  const d = dayState(), l = curLesson(d), t = dailyTasks().find(t => t.id === id);
+  DM = { id, letter: l.jamo[0] || '', finished: (d.prog[id] || 0) >= t.n };
   SFX.tap();
+  const L = DM.letter;
   if (id === 'card') { const list = isCons(L) ? CONS : VOWS; go(cards, isCons(L) ? 'c' : 'v'); openCard(list, list.findIndex(x => x.j === L), () => go(daily)); }
   else if (id === 'trace') go(traceJamo, L, () => go(daily));
   else if (id === 'balloon') go(balloons);
   else if (id === 'build') go(blocks, 'quiz');
   else if (id === 'read') go(readQuiz);
   else if (id === 'puzzle') go(puzzle);
+  else if (id === 'review') go(review);
   else if (id === 'wtrace') go(traceWord, dmWord(1, 3));
 }
-// 오늘 자음이 들어간 낱말 하나 (없으면 아무 낱말)
+// 오늘 과의 낱말 하나 (없으면 오늘 글자가 들어간 낱말, 그것도 없으면 오늘 글자 하나)
 function dmWord(min, max) {
-  const pool = wordsWith(DM.letter).filter(x => x.n >= min && x.n <= max && x.w !== lastWord);
-  return rnd(pool.length ? pool : WORDS.filter(x => x.n >= min && x.n <= max));
+  const l = curLesson(), inR = x => x.n >= min && x.n <= max && x.w !== lastWord;
+  let pool = l.words.filter(inR);
+  if (!pool.length && l.jamo[0]) pool = knownWords().filter(x => inR(x) && [...x.w].some(s => decompose(s).includes(l.jamo[0])));
+  if (!pool.length && l.syl.length && min <= 1) pool = l.syl.filter(s => s !== lastWord).map(s => ({ w: s, e: ONE[s] || '✨', n: 1 }));
+  if (!pool.length) pool = knownWords().filter(inR);
+  return rnd(pool);
+}
+// 글자 만들기 미션: 오늘 과의 글자를 차례로
+let dmSylQ = [];
+function dmSyl() {
+  const l = curLesson();
+  const all = l.kind === 'row' ? VJ.map(v => compose(l.jamo[0], v)) : l.syl;
+  if (!dmSylQ.length) dmSylQ = shuffle(all);
+  return dmSylQ.shift();
+}
+
+/* ───────── 🔁 복습 퀴즈: 지금까지 배운 것을 섞어서 ─────────
+   아린: 소리 듣고 글자 고르기 / 그림 보고 첫소리 글자 / 소리 듣고 합친 글자
+   다빈: 소리 듣고 글자 / 낱말 읽고 그림 / 그림 보고 맞는 글씨 (헷갈리는 글자로 보기 만들기)
+   틀린 문제는 조금 뒤에 다시 나옴 */
+const SIM = { ㅏ: 'ㅓㅑ', ㅓ: 'ㅏㅕ', ㅗ: 'ㅜㅛ', ㅜ: 'ㅗㅠ', ㅡ: 'ㅜㅣ', ㅣ: 'ㅡㅏ', ㅑ: 'ㅕㅏ', ㅕ: 'ㅑㅓ', ㅛ: 'ㅠㅗ', ㅠ: 'ㅛㅜ', ㅐ: 'ㅔㅏ', ㅔ: 'ㅐㅓ', ㅟ: 'ㅚㅜ', ㅢ: 'ㅡㅣ', ㅘ: 'ㅝㅏ', ㅝ: 'ㅘㅓ', ㅚ: 'ㅟㅗ',
+  ㄱ: 'ㅋㄲ', ㅋ: 'ㄱ', ㄲ: 'ㄱㅋ', ㄷ: 'ㅌㄸ', ㅌ: 'ㄷ', ㄸ: 'ㄷㅌ', ㅂ: 'ㅍㅃ', ㅍ: 'ㅂ', ㅃ: 'ㅂㅍ', ㅈ: 'ㅊㅉ', ㅊ: 'ㅈ', ㅉ: 'ㅈㅊ', ㅅ: 'ㅆ', ㅆ: 'ㅅ', ㄴ: 'ㄹㅁ', ㄹ: 'ㄴ', ㅁ: 'ㄴㅂ', ㅇ: 'ㅎ', ㅎ: 'ㅇ' };
+const TSIM = { ㄴ: 'ㅇㅁ', ㅇ: 'ㄴㅁ', ㅁ: 'ㄴㅇ', ㄹ: 'ㄴ', ㄱ: 'ㅂㅇ', ㅂ: 'ㄱㅁ', ㅅ: 'ㄱ' };
+const TOK = 'ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎㄲㅆ';
+// 글자 하나를 비슷한 글자로 바꾸기
+function mutateSyl(s) {
+  const [c, v, t] = decompose(s);
+  for (let k = 0; k < 20; k++) {
+    const r = Math.random();
+    if (t && r < .35) { const t2 = Math.random() < .25 ? '' : rnd([...(TSIM[t] || 'ㄴㅇ')]); if (t2 !== t) return compose(c, v, t2); }
+    else if (r < .65 && SIM[v]) return compose(c, rnd([...SIM[v]]), t);
+    else if (SIM[c]) { const c2 = rnd([...SIM[c]]); if (!t || TOK.includes(t)) return compose(c2, v, t); }
+  }
+  return compose(c, rnd(VJ.filter(x => x !== v)), t);
+}
+function fillOthers(a, pool, extra, n) {
+  const out = shuffle([...new Set(pool)].filter(x => x !== a)).slice(0, n);
+  for (const x of shuffle(extra)) { if (out.length >= n) break; if (x !== a && !out.includes(x)) out.push(x); }
+  return out;
+}
+function makeQ(L) {
+  const types = [];
+  if (kid === 'arin') { if (L.letters.length) types.push('hearL', 'picL'); if (L.syl.length) types.push('hearS', 'hearS'); }
+  else { if (L.syl.length) types.push('hearS'); if (L.words.length) types.push('readW', 'spell', 'spell'); }
+  if (!types.length) return null;
+  const ty = rnd(types);
+  const letterOpt = j => ({ html: `<span style="color:var(--${isCons(j) ? 'c' : 'v'})">${j}</span>`, val: j, say: [phon(j)] });
+  if (ty === 'hearL' || ty === 'picL') {
+    const pool = ty === 'picL' ? L.letters.filter(x => info(x.v)) : L.letters;
+    const a = pickW(pool, L.today), x = info(a);
+    const others = fillOthers(a, L.letters.map(x => x.v), ARIN_LESSONS.flatMap(l => l.jamo), 2);
+    const opts = shuffle([a, ...others]).map(letterOpt);
+    return ty === 'hearL'
+      ? { ty, show: '<button class="qbig">🔊</button>', tap: [phon(a)], ask: [phon(a)], opts, ans: a, done: [phon(a), 300, x.w] }
+      : { ty, show: `<button class="qbig">${x.e}</button><div class="hint">무슨 글자로 시작할까?</div>`, tap: [x.w], ask: [x.w], opts, ans: a, done: [phon(a), 300, x.w] };
+  }
+  if (ty === 'hearS') {
+    const a = pickW(L.syl, L.today);
+    const near = []; for (let i = 0; i < 12; i++) near.push(mutateSyl(a));
+    const others = fillOthers(a, kid === 'arin' ? L.syl.map(x => x.v) : near, near, 2);
+    const opts = shuffle([a, ...others]).map(s => ({ html: s, val: s, say: [s] }));
+    return { ty, show: '<button class="qbig">🔊</button>', tap: [a], ask: [a], opts, ans: a, done: blendParts(a) };
+  }
+  const w = pickW(L.words, L.today);
+  if (ty === 'readW') {
+    const others = shuffle(knownWords().filter(y => y.w !== w.w && y.e !== w.e)).slice(0, 2);
+    const opts = shuffle([w, ...others]).map(o => ({ html: o.e, val: o.w, say: [o.w] }));
+    return { ty, show: `<div class="rword">${[...w.w].map(s => `<button>${s}</button>`).join('')}</div><div class="hint">읽고 그림을 골라요 · 글자를 누르면 소리가 나요</div>`, tap: null, ask: null, opts, ans: w.w, done: [w.w] };
+  }
+  // spell: 그림 보고 맞는 글씨 고르기
+  const wrong = new Set();
+  for (let k = 0; k < 30 && wrong.size < 2; k++) { const sy = [...w.w], i = Math.floor(Math.random() * sy.length); sy[i] = mutateSyl(sy[i]); const s = sy.join(''); if (s !== w.w) wrong.add(s); }
+  const opts = shuffle([w.w, ...wrong]).map(s => ({ html: s, val: s, say: [s], cls: 'w' }));
+  return { ty, show: `<button class="qbig">${w.e}</button><div class="hint">맞게 쓴 글씨를 골라요</div>`, tap: [w.w], ask: [w.w], opts, ans: w.w, done: [w.w] };
+}
+function review() {
+  topbar('🔁 복습', () => go(menu));
+  const m = mainEl('<div class="rq qz"></div>'), box = $('.qz', m);
+  const L = learned(), retry = [];
+  let n = 0;
+  function next() {
+    n++;
+    const q = retry.length && (n % 3 === 0 || Math.random() < .3) ? retry.shift() : makeQ(L);
+    if (!q) { box.innerHTML = '<div class="hint" style="font-size:30px">아직 복습할 게 없어요. 오늘의 한글부터 해 봐요!</div>'; return; }
+    show(q);
+  }
+  function show(q) {
+    box.innerHTML = '';
+    const top = h(`<div class="qtop">${q.show}</div>`);
+    const ch = h(`<div class="choices">${q.opts.map((o, i) => `<button class="ch qo press ${o.cls || ''}" data-i="${i}">${o.html}</button>`).join('')}</div>`);
+    box.append(top, ch);
+    const big = $('.qbig', top); if (big && q.tap) big.onclick = () => { bounce(big); say(...q.tap); };
+    $$('.rword button', top).forEach(b => b.onclick = () => { $$('.rword button', top).forEach(o => o.classList.remove('lit')); b.classList.add('lit'); bounce(b); say(b.textContent); });
+    if (q.ask) setTimeout(() => say(...q.ask), 250);
+    let over = false;
+    $$('.qo', ch).forEach(b => b.onclick = () => {
+      if (over) return;
+      const o = q.opts[+b.dataset.i];
+      if (o.val === q.ans) {
+        over = true; b.classList.add('good'); $$('.qo', ch).forEach(e => { if (e !== b) e.classList.add('no'); });
+        $$('.rword button', top).forEach(e => e.classList.add('lit'));
+        SFX.ok(); say(...q.done); addStar(b); report('review');
+        setTimeout(() => { if (box.isConnected && !$('.ov')) next(); }, 2000);
+      } else {
+        SFX.no(); bounce(b, 'shake'); b.classList.add('no'); say(...o.say);
+        if (!q.again) { q.again = true; retry.push({ ...q, opts: shuffle(q.opts) }); }
+      }
+    });
+  }
+  next();
 }
 function report(id) {
   if (!DM || DM.id !== id || DM.finished) return;
@@ -859,9 +1127,9 @@ function traceWord(x, si = 0) {
   const m = mainEl(`<div class="wordhead"><button class="pe">${x.e}</button>${syl.map((s, i) => `<span class="${i < si ? 'dn' : i === si ? 'cur' : ''}">${s}</span>`).join('')}</div>
     <div class="trace"><div class="tbox"></div><div class="side">
     <button class="rb go press snd">🔊</button><button class="rb press see">👀</button><button class="rb press clr">🔄</button><button class="rb press nx">▶</button></div></div>`);
-  const s = syl[si], { c, v } = sylStrokes(s), strokes = [...c, ...v];
+  const s = syl[si], { c, v, t: tt } = sylStrokes(s), strokes = [...c, ...v, ...tt];
   const t = makeTracer($('.tbox', m), {
-    strokes, colors: [...c.map(() => '#3B82F6'), ...v.map(() => '#EF5350')], hi: hiColor(), width: 8.5, rule: traceRule(),
+    strokes, colors: [...c.map(() => '#3B82F6'), ...v.map(() => '#EF5350'), ...tt.map(() => '#17A35B')], hi: hiColor(), width: tt.length ? 7 : 8.5, rule: tt.length && kid === 'davin' ? { tol: 9, cov: .78, dir: true } : traceRule(),
     onDone() {
       if (si < syl.length - 1) {
         SFX.ok(); say(s); setTimeout(() => go(traceWord, x, si + 1), 1100);
@@ -888,65 +1156,85 @@ function traceWord(x, si = 0) {
   if (si === 0) say(x.w, 500, s); else say(s);
 }
 
-/* ───────── 🧱 글자 만들기: 자음 + 모음 = 글자 ───────── */
+/* ───────── 🧱 글자 만들기: 자음 + 모음 (+ 받침) = 글자 ─────────
+   배운 쌍자음·겹모음은 판에 더해지고, 받침을 배운 뒤에는 받침 칸이 생김 */
+const EXTRA_C = ['ㄲ', 'ㄸ', 'ㅃ', 'ㅆ', 'ㅉ'], EXTRA_V = ['ㅐ', 'ㅔ', 'ㅟ', 'ㅢ', 'ㅘ', 'ㅝ', 'ㅚ'];
+const oneWord = s => ONE[s] || (knownWords().find(x => x.w === s) || {}).e;
 function blocks(mode = 'free') {
-  if (isDM('build')) mode = 'quiz';
+  const dm = isDM('build'); if (dm) mode = 'quiz';
   topbar('🧱 글자 만들기', () => go(menu));
   const m = mainEl();
-  if (!isDM('build')) m.append(tabs([['free', '🧱 마음대로'], ['quiz', '🎯 소리 듣고 만들기']], mode, t => go(blocks, t)));
-  const eq = h(`<div class="eq"><button class="slot cs"></button><span class="op">+</span><button class="slot vs"></button><span class="op">=</span><button class="slot res">?</button></div>`);
+  const L = learned(), know = new Set(L.letters.map(x => x.v));
+  const jongMode = kid === 'davin' && LESSONS().slice(0, L.today + 1).some(l => l.kind === 'jong');
+  const cons = [...CJ, ...EXTRA_C.filter(j => know.has(j))], vows = [...VJ, ...EXTRA_V.filter(j => know.has(j))];
+  if (jongMode || cons.length + vows.length > 24) m.classList.add('jm');
+  if (!dm) m.append(tabs([['free', '🧱 마음대로'], ['quiz', '🎯 소리 듣고 만들기']], mode, t => go(blocks, t)));
+  const eq = h(`<div class="eq"><button class="slot cs"></button><span class="op">+</span><button class="slot vs"></button>
+    ${jongMode ? '<span class="op">+</span><button class="slot ts"></button>' : ''}<span class="op">=</span><button class="slot res">?</button></div>`);
   const bonus = h('<div class="bonus"></div>');
   const cp = h('<div class="pal cp"></div>'), vp = h('<div class="pal vp"></div>');
   const tg = h('<button class="tgt press hidden">🔊 다시 듣기</button>');
   m.append(eq, tg, bonus, cp, vp);
-  let c = null, v = null, target = null, busy = false;
-  const cs = $('.cs', eq), vs = $('.vs', eq), res = $('.res', eq);
-  CJ.forEach(j => { const b = h(`<button class="press">${j}</button>`); b.onclick = () => pick(j); cp.append(b); });
-  VJ.forEach(j => { const b = h(`<button class="press">${j}</button>`); b.onclick = () => pick(j); vp.append(b); });
+  let c = null, v = null, t = null, target = null, busy = false;
+  const cs = $('.cs', eq), vs = $('.vs', eq), ts = $('.ts', eq), res = $('.res', eq);
+  cons.forEach(j => { const b = h(`<button class="press">${j}</button>`); b.onclick = () => pick(j); cp.append(b); });
+  vows.forEach(j => { const b = h(`<button class="press">${j}</button>`); b.onclick = () => pick(j); vp.append(b); });
+  const needT = () => mode === 'quiz' && target && !!decompose(target)[2];
   function paint() {
     cs.textContent = c || ''; cs.classList.toggle('full', !!c);
     vs.textContent = v || ''; vs.classList.toggle('full', !!v);
-    $$('button', cp).forEach(b => b.classList.toggle('on', b.textContent === c));
+    if (ts) {
+      ts.textContent = t || (c && v && (needT() || mode === 'free') ? '받침' : '');
+      ts.classList.toggle('full', !!t); ts.classList.toggle('ask', !t && !!(c && v && needT()));
+    }
+    $$('button', cp).forEach(b => b.classList.toggle('on', b.textContent === c || b.textContent === t));
     $$('button', vp).forEach(b => b.classList.toggle('on', b.textContent === v));
-    if (c && v) { res.innerHTML = glyphSVG(compose(c, v)); bounce(res, 'pop'); }
+    if (c && v) { res.innerHTML = glyphSVG(compose(c, v, t || '')); bounce(res, 'pop'); }
     else { res.textContent = '?'; bonus.innerHTML = ''; }
   }
+  function showBonus(s) { const e = oneWord(s); if (e) { bonus.innerHTML = `${e} <small>${s}</small>`; bounce(bonus, 'pop'); } else bonus.innerHTML = ''; }
   function pick(j) {
     if (busy) return;
-    if (isCons(j)) c = j; else v = j;
+    if (isCons(j)) {
+      // 받침 칸: 받침을 배웠고, 앞 두 칸이 찼고, 받침이 될 수 있는 자음일 때
+      if (ts && c && v && TOK.includes(j) && (mode === 'free' || needT())) t = j; else c = j;
+    } else v = j;
     paint();
     if (!(c && v)) { bounce(isCons(j) ? cs : vs); say(phon(j)); return; }
-    const s = compose(c, v);
-    if (mode === 'free') {
-      say(phon(c), 250, phon(v), 450, s).then(() => { if (ONE[s] && compose(c || 'ㄱ', v || 'ㅏ') === s) { bonus.innerHTML = `${ONE[s]} <small>${s}</small>`; bounce(bonus, 'pop'); say(s + '!'); } });
+    const s = compose(c, v, t || '');
+    if (mode === 'free') { say(...blendParts(s)).then(() => { if (c && v && compose(c, v, t || '') === s) showBonus(s); }); return; }
+    const [tc, tv, tt] = decompose(target);
+    if (tt && !t && c === tc && v === tv) { bounce(ts); say(...blendParts(s), 300, '받침은?'); return; }   // 받침만 남음
+    busy = true;
+    if (s === target) {
+      say(...blendParts(s));
+      setTimeout(() => {
+        SFX.tada(); confetti(24); addStar(res); report('build'); showBonus(s);
+        setTimeout(newTarget, 1900);
+      }, 1500);
     } else {
-      busy = true;
-      if (s === target) {
-        say(phon(c), 250, phon(v), 400, s);
-        setTimeout(() => {
-          SFX.tada(); confetti(24); addStar(res); report('build');
-          if (ONE[s]) { bonus.innerHTML = `${ONE[s]} <small>${s}</small>`; bounce(bonus, 'pop'); }
-          setTimeout(newTarget, 1900);
-        }, 1500);
-      } else {
-        const [tc, tv] = decompose(target);
-        say(s, 500, target);
-        setTimeout(() => {
-          SFX.no();
-          if (c !== tc) { bounce(cs, 'shake'); c = null; }
-          if (v !== tv) { bounce(vs, 'shake'); v = null; }
-          busy = false; paint();
-        }, 1300);
-      }
+      say(s, 500, target);
+      setTimeout(() => {
+        SFX.no();
+        if (c !== tc) { bounce(cs, 'shake'); c = null; }
+        if (v !== tv) { bounce(vs, 'shake'); v = null; }
+        if (t && t !== tt) { bounce(ts, 'shake'); t = null; }
+        busy = false; paint();
+      }, 1300);
     }
   }
-  cs.onclick = () => { if (busy) return; if (c) { c = null; paint(); } };
+  cs.onclick = () => { if (busy) return; if (c) { c = null; t = null; paint(); } };
   vs.onclick = () => { if (busy) return; if (v) { v = null; paint(); } };
-  res.onclick = () => { if (c && v) { const s = compose(c, v); bounce(res); say(phon(c), 250, phon(v), 450, s); } else if (target) say(target); };
+  if (ts) ts.onclick = () => { if (busy) return; if (t) { t = null; paint(); } };
+  res.onclick = () => { if (c && v) { bounce(res); say(...blendParts(compose(c, v, t || ''))); } else if (target) say(target); };
   function newTarget() {
-    busy = false; c = v = null; bonus.innerHTML = '';
-    const easyV = 'ㅏㅓㅗㅜㅡㅣ';
-    let s; do { s = isDM('build') ? compose(DM.letter, rnd(VJ)) : compose(rnd(CJ), rnd(Object.keys(K().solved).length > 10 ? VJ : [...easyV])); } while (s === target);
+    busy = false; c = v = t = null; bonus.innerHTML = '';
+    const easyV = [...'ㅏㅓㅗㅜㅡㅣ'];
+    let s; do {
+      s = dm ? dmSyl()
+        : kid === 'davin' && L.syl.length && Math.random() < .6 ? pickW(L.syl, L.today)
+          : compose(rnd(CJ), rnd(Object.keys(K().solved).length > 10 ? VJ : easyV));
+    } while (s === target);
     target = s; paint(); say(target);
   }
   if (mode === 'quiz') { tg.classList.remove('hidden'); tg.onclick = () => say(target); newTarget(); }
@@ -957,7 +1245,7 @@ let lastWord = '';
 function levelPool(done, forRead) {
   const n = Object.keys(done).length;
   const max = n < 8 ? 2 : n < 20 ? 3 : 4, min = forRead ? 1 : 2;
-  const pool = WORDS.filter(x => x.n >= min && x.n <= max && x.w !== lastWord);
+  const pool = knownWords().filter(x => x.n >= min && x.n <= max && x.w !== lastWord);
   const fresh = pool.filter(x => !done[x.w]);
   return fresh.length ? fresh : pool;
 }
@@ -966,7 +1254,7 @@ function puzzle() {
   const k = K(), x = isDM('puzzle') ? dmWord(2, 3) : rnd(levelPool(k.solved)); lastWord = x.w;
   const syl = [...x.w], solvedN = Object.keys(k.solved).length;
   const extraN = solvedN < 5 ? 1 : solvedN < 15 ? 2 : 3;
-  const others = shuffle([...new Set(WORDS.flatMap(y => [...y.w]))].filter(s => !syl.includes(s))).slice(0, extraN);
+  const others = shuffle([...new Set(knownWords().flatMap(y => [...y.w]))].filter(s => !syl.includes(s))).slice(0, extraN);
   const tilesData = shuffle([...syl, ...others]);
   const m = mainEl(`<div class="pz"><button class="pzpic press">${x.e}</button>
     <div class="slots">${syl.map(() => '<button class="pslot"></button>').join('')}</div>
@@ -1014,7 +1302,7 @@ function readQuiz() {
   topbar('📖 읽고 찾기', () => go(menu));
   const k = K(), x = isDM('read') ? dmWord(1, 3) : rnd(levelPool(k.read, true)); lastWord = x.w;
   const n = Object.keys(k.read).length < 6 ? 3 : 4;
-  const opts = shuffle([x, ...shuffle(WORDS.filter(y => y !== x)).slice(0, n - 1)]);
+  const opts = shuffle([x, ...shuffle(knownWords().filter(y => y.w !== x.w && y.e !== x.e)).slice(0, n - 1)]);
   const m = mainEl(`<div class="rq">
     <div class="rword">${[...x.w].map(s => `<button>${s}</button>`).join('')}</div>
     <div class="hint">글자를 누르면 소리가 나요 · 다 읽었으면 그림을 골라요</div>
@@ -1065,10 +1353,10 @@ function balloons() {
   $('.say', sky).onclick = announce;
   function round() {
     bl.forEach(b => b.el.remove()); bl = []; lock = false;
-    if (dm) target = group.length === 1 || Math.random() < .6 ? DM.letter : rnd(group.filter(j => j !== DM.letter));
+    if (dm) { const f = group.includes(DM.letter) ? DM.letter : null; do target = f && Math.random() < .45 ? f : rnd(group); while (target === prevT && group.length > 1); }
     else { do target = rnd(group); while (target === prevT && group.length > 1); }
     prevT = target;
-    const pool = group.length >= 3 ? group : dm ? [...new Set([...group, ...ORDER().slice(0, 6)])] : [...CJ, ...VJ];
+    const pool = group.length >= 3 ? group : dm ? [...new Set([...group, ...ARIN_SEQ.filter(x => x !== '+').slice(0, 6)])] : [...CJ, ...VJ];
     const n = kid === 'arin' ? 3 : 4;
     const letters = shuffle([target, ...shuffle(pool.filter(j => j !== target)).slice(0, n - 1)]);
     const W = sky.clientWidth, H = sky.clientHeight, cols = shuffle(BCOL);
@@ -1136,7 +1424,10 @@ function settings() {
       <li><b>다빈</b> (받침 없는 글자 읽는 중): 🧱 글자 만들기(🎯 소리 듣고 만들기)로 '그+아=가' 합치는 연습 → 🧩 낱말 퍼즐(그림 보고 글자 맞추기) → 📖 읽고 찾기(소리 없이 읽고 그림 고르기, 막히면 글자를 눌러 한 글자씩 듣기).</li>
       <li>자음 소리는 '그, 느, 드…'(ㅡ를 붙인 소리)로, 모음은 '아, 야, 어…'로 들려줘요. 글자 이름(기역, 니은…)은 소리 카드의 이름 단추에 있어요.</li>
       <li>따라 쓰기: 초록 점에서 시작해 화살표 방향으로. 👀 은 쓰는 순서 보여 주기, 두 번 틀리면 저절로 보여 줘요. 아린이는 넉넉하게, 다빈이는 방향까지 봐요.</li>
-      <li>📅 <b>오늘의 한글</b>: 매일 한 글자. 아린은 글자 듣기 → 두 번 쓰기 → 풍선 5개, 다빈은 그날 자음으로 글자 만들기 4 → 읽고 찾기 3 → 낱말 퍼즐 2 → 낱말 쓰기 1. 다 하면 🏅 도장과 별 3개.</li>
+      <li>📅 <b>오늘의 한글</b>: 매일 새로 배우기 + 🔁 지금까지 배운 것 섞어 복습. 다 하면 🏅 도장과 별 3개, 다음 날 새 과로 넘어가요.
+        <br>아린 (36과): 글자 하나씩(ㄱ→ㄴ→ㅏ…) 배우다가 사이사이 '가 나'처럼 배운 글자를 합쳐 보는 날. 복습은 소리 듣고 글자 고르기, 그림 보고 첫 글자 고르기.
+        <br>다빈 (28과): ㄱ~ㅎ 자음 줄(가거고구기) 14과 → ㅐ ㅔ → ㅟ ㅢ → ㅘ ㅝ ㅚ → ㄲ → ㄸ ㅃ → ㅆ ㅉ → 받침 ㄴ ㅇ ㅁ ㄹ ㄱ ㅂ ㅅ. 복습은 소리 듣고 글자, 읽고 그림, 그림 보고 맞는 글씨 고르기(헷갈리는 글자로). 틀린 문제는 조금 뒤에 다시 나와요.
+        <br>끝까지 다 배우면 매일 복습하는 날이 돼요.</li>
       <li>별 10개마다 동물 스티커가 생겨요.</li>
     </ul>
     <h3>처음부터 다시</h3>
@@ -1152,7 +1443,7 @@ function settings() {
   });
   // 아이별 오늘 글자 (kid 를 잠깐 바꿔서 그 아이 기준으로 계산)
   const withKid = (k, f) => { const was = kid; kid = k; try { return f(); } finally { kid = was; } };
-  const showLesson = () => $$('[data-lt]', ov).forEach(e => withKid(e.dataset.lt, () => { const d = dayState(); e.textContent = `${lessonLetter(d)} (${d.lesson + 1}번째)`; }));
+  const showLesson = () => $$('[data-lt]', ov).forEach(e => withKid(e.dataset.lt, () => { const d = dayState(); e.textContent = `${curLesson(d).title} (${d.lesson + 1}번째)`; }));
   $$('[data-ls]', ov).forEach(b => b.onclick = () => withKid(b.dataset.ls, () => {
     const d = dayState(); d.lesson = Math.max(0, d.lesson + +b.dataset.d); d.prog = {}; d.done = false; save(); showLesson();
   }));
