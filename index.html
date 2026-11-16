@@ -337,6 +337,21 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
 .cset button.on{opacity:1;background:var(--kid3);box-shadow:0 4px 0 var(--kid)}
 .cset img{width:44px;height:44px;object-fit:contain}
 
+/* 🎯 도전 · 🎓 시험 */
+.tdots{display:flex;gap:8px;flex:none}
+.tdots i{width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:0 3px 0 var(--line);display:grid;place-items:center;font-style:normal;font-size:24px}
+.tdots i.cur{background:var(--kid3);box-shadow:0 3px 0 var(--kid)}
+.tend{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.tend .tbig{font-size:min(20vmin,140px);line-height:1}
+.tend .tmsg{font-size:min(8vmin,56px)}
+.tend .tscore{font-size:min(6vmin,40px);letter-spacing:4px}
+.tend .tsub{font-size:min(4vmin,28px);color:var(--soft)}
+.exh{display:flex;flex-direction:column;align-items:center;font-size:min(6vmin,46px);text-align:center}
+.exh small{font-size:.55em;color:var(--soft)}
+.wk{font-size:.45em;color:var(--soft);margin-right:2px}
+.medal{display:inline-block;margin:2px 4px;opacity:.5}
+.medal.on{opacity:1}
+
 /* 🤔 생각 시간 */
 .think{pointer-events:none}
 .think .ch,.think .tile,.think .bal,.think .pal button{filter:grayscale(.8);opacity:.45;transition:opacity .2s}
@@ -526,7 +541,7 @@ let S = null;
 try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
 S = Object.assign({ rate: .8, voice: '' }, S || {});
 S.kids = S.kids || {};
-const freshKid = () => ({ stars: 0, heard: {}, traced: {}, wtraced: {}, solved: {}, read: {}, bal: 0, log: {}, dm: null, dex: {}, books: {}, mem: 0, trophies: 0 });
+const freshKid = () => ({ stars: 0, heard: {}, traced: {}, wtraced: {}, solved: {}, read: {}, bal: 0, log: {}, dm: null, dex: {}, books: {}, mem: 0, trophies: 0, miss: {}, units: {}, medals: 0 });
 for (const k of ['davin', 'arin']) S.kids[k] = Object.assign(freshKid(), S.kids[k] || {});
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 const KIDS = { davin: { name: '다빈', img: 'avatar-davin.png' }, arin: { name: '아린', img: 'avatar-arin.png' } };
@@ -652,7 +667,7 @@ function go(fn, ...a) {
 }
 function topbar(title, back) {
   let pill = '';
-  if (DM) { const t = dailyTasks().find(t => t.id === DM.id), p = dayState().prog[DM.id] || 0; if (t) pill = `<div class="pill">🎯 <b>${Math.min(p, t.n)}</b>/${t.n}</div>`; }
+  if (DM && DM.id !== 'chal' && DM.id !== 'exam') { const t = dailyTasks().find(t => t.id === DM.id), p = dayState().prog[DM.id] || 0; if (t) pill = `<div class="pill">🎯 <b>${Math.min(p, t.n)}</b>/${t.n}</div>`; }
   const el = h(`<div class="top"><button class="back press">⬅</button><h1><img src="${KIDS[kid].img}" alt="">${title}</h1>${pill}<div class="stars">⭐<b>${K().stars}</b></div></div>`);
   el.querySelector('.back').onclick = DM ? () => go(daily) : back; app.append(el); return el;
 }
@@ -712,7 +727,7 @@ function menu() {
   });
   m.append(grid);
   const st = stickersOf(kid);
-  m.append(h(`<div class="shelf"><small>내 스티커</small>${K().trophies ? '🏆'.repeat(K().trophies) + ' ' : ''}${st.length ? st.join('') : '<small>별 10개 모으면 생겨요 ⭐</small>'}</div>`));
+  m.append(h(`<div class="shelf"><small>내 스티커</small>${K().trophies ? '🏆'.repeat(K().trophies) + ' ' : ''}${K().medals ? '🎖️'.repeat(K().medals) + ' ' : ''}${st.length ? st.join('') : '<small>별 10개 모으면 생겨요 ⭐</small>'}</div>`));
 }
 
 /* ───────── 📅 오늘의 한글: 매일 미션 ─────────
@@ -764,12 +779,31 @@ const DAVIN_LESSONS = [
 const LESSONS = () => kid === 'arin' ? ARIN_LESSONS : DAVIN_LESSONS;
 const REVIEW_DAY = { kind: 'review', title: '🔁 복습하는 날', jamo: [], syl: [], words: [] };
 const lessonAt = i => LESSONS()[i] || REVIEW_DAY;
+/* 🎓 단원: 단원 마지막 과를 끝낸 다음 날은 승급 시험 (몇 번째 과에서 끝나는지, 이름) */
+const UNITS = {
+  davin: [[6, '자음 ㄱ~ㅅ'], [13, '자음 ㅇ~ㅎ'], [17, '받침 ㄴ ㅇ ㅁ ㄹ'], [22, 'ㅐ ㅔ · 받침 ㄱ ㅂ ㅅ'], [27, '겹모음 · 쌍자음']],
+  arin: [[9, 'ㄱ ㄴ ㄷ ㄹ · ㅏ ㅓ ㅗ'], [18, 'ㅁ ㅂ ㅅ · ㅜ ㅡ ㅣ'], [27, 'ㅇ ㅈ ㅊ ㅋ · ㅑ ㅕ'], [35, 'ㅌ ㅍ ㅎ · ㅛ ㅠ']],
+};
+const unitEnding = i => UNITS[kid].findIndex(([e]) => e === i);
+// [문제 수, 통과 개수] — 도전: 다빈 5문제 중 4 (80%), 아린 4문제 중 3 / 시험: 다빈 10 중 8, 아린 10 중 7
+const TEST = { chal: { davin: [5, 4], arin: [4, 3] }, exam: { davin: [10, 8], arin: [10, 7] } };
+// 오늘(p)이 끝난 뒤 다음 날: 못 끝냈으면 같은 날 다시 / 단원 끝 → 시험 / 시험 못 넘음 → 헷갈린 글자 복습 → 다시 시험
+function nextDay(p, k = K()) {
+  if (!p) return { lesson: 0 };
+  if (!p.done) return p.mode ? { lesson: p.lesson, mode: p.mode, unit: p.unit } : { lesson: p.lesson };
+  if (p.mode === 'exam') return k.units[p.unit] ? { lesson: p.lesson + 1 } : { lesson: p.lesson, mode: 'fix', unit: p.unit };
+  if (p.mode === 'fix') return { lesson: p.lesson, mode: 'exam', unit: p.unit };
+  const u = unitEnding(p.lesson);
+  return u >= 0 && !k.units[u] ? { lesson: p.lesson, mode: 'exam', unit: u } : { lesson: p.lesson + 1 };
+}
 function dayState() {
   const k = K(), t = dayKey();
-  if (!k.dm || k.dm.date !== t) { const p = k.dm; k.dm = { date: t, lesson: p ? p.lesson + (p.done ? 1 : 0) : 0, prog: {}, done: false }; save(); }
+  if (!k.dm || k.dm.date !== t) { const p = k.dm; k.dm = { date: t, ...nextDay(p, k), prog: {}, done: false }; save(); }
   return k.dm;
 }
-const curLesson = (d = dayState()) => lessonAt(d.lesson);
+const EMPTY = { jamo: [], syl: [], words: [] };
+const curLesson = (d = dayState()) => d.mode === 'exam' ? { ...EMPTY, kind: 'exam', title: `🎓 승급 시험 · ${UNITS[kid][d.unit][1]}` }
+  : d.mode === 'fix' ? { ...EMPTY, kind: 'fix', title: '🩹 헷갈린 글자 복습' } : lessonAt(d.lesson);
 // 지금까지 배운 것 (i = 몇 번째 과에서 배웠는지)
 function learned() {
   const n = dayState().lesson, Ls = LESSONS().slice(0, n + 1), letters = [], syl = [], words = [];
@@ -779,6 +813,11 @@ function learned() {
 // 오늘 것 40%, 예전 것 60%
 function pickW(arr, today) {
   if (!arr.length) return null;
+  const weak = weakBoost ? new Set(weakList().map(x => x[0])) : null;
+  if (weak && weak.size && Math.random() < (dayState().mode === 'fix' ? .7 : .25)) {
+    const w = arr.filter(x => jamoKeys(x.v).some(j => weak.has(j)));
+    if (w.length) return rnd(w).v;
+  }
   const t = arr.filter(x => x.i === today), o = arr.filter(x => x.i !== today);
   return rnd(t.length && (!o.length || Math.random() < .4) ? t : o).v;
 }
@@ -792,6 +831,11 @@ function knownWords() {
 const T = (id, ic, t, n) => ({ id, ic, t, n });
 function dailyTasks() {
   const l = curLesson();
+  if (l.kind === 'exam') return [T('review', '🔁', '몸풀기', 3), T('exam', '🎓', '승급 시험', 1)];
+  if (l.kind === 'fix') return kid === 'arin' ? [T('review', '🔁', '복습', 6), T('balloon', '🎈', '풍선 톡톡', 5)] : [T('review', '🔁', '복습', 8), T('puzzle', '🧩', '낱말 퍼즐', 2)];
+  return [...baseTasks(l), T('chal', '🎯', '오늘의 도전', 1)];
+}
+function baseTasks(l) {
   if (kid === 'arin') {
     if (l.kind === 'letter') return [T('card', '🔊', '새 글자', 1), T('trace', '✏️', '써 보기', 1), T('review', '🔁', '복습', 4), T('balloon', '🎈', '풍선 톡톡', 4)];
     if (l.kind === 'combo') return [T('build', '🧱', '글자 합치기', Math.min(4, l.syl.length)), T('wtrace', '✏️', '써 보기', 1), T('review', '🔁', '복습', 4), T('balloon', '🎈', '풍선 톡톡', 4)];
@@ -813,6 +857,17 @@ function weekStrip() {
 // 글자 하나 소리 내기: 받침 없으면 '그…아…가', 받침 있으면 '가…각'
 const blendParts = s => { const [c, v, t] = decompose(s); return t ? [compose(c, v), 350, s] : [phon(c), 250, phon(v), 400, s]; };
 function heroEl(l) {
+  if (l.kind === 'exam') {
+    const [N, P] = TEST.exam[kid];
+    return h(`<div class="dhero"><span class="em">🎓</span><span class="exh">${UNITS[kid][dayState().unit][1]}<small>${N}문제 중 ${P}개 맞히면 승급! 🎖️</small></span></div>`);
+  }
+  if (l.kind === 'fix') {
+    const w = weakList().slice(0, 5);
+    if (!w.length) return h('<div class="dhero"><span class="em">🩹</span><span style="font-size:min(7vmin,52px)">지금까지 배운 것 모두!</span></div>');
+    const el = h(`<div class="dhero"><span class="em">🩹</span><div class="row5">${w.map(([j]) => `<button>${keyLabel(j)}</button>`).join('')}</div></div>`);
+    $$('.row5 button', el).forEach((b, i) => b.onclick = () => { bounce(b); say(...keySay(w[i][0])); });
+    return el;
+  }
   if (l.kind === 'review') return h('<div class="dhero"><span class="em">🔁</span><span style="font-size:min(7vmin,52px)">지금까지 배운 것 모두!</span></div>');
   if (l.kind === 'letter') {
     const L = l.hero, x = info(L);
@@ -847,7 +902,10 @@ function daily() {
   const any = Object.keys(d.prog).length;
   const gb = next ? h(`<button class="gobig press">▶ ${any ? '이어서' : '시작'}</button>`) : h('<button class="gobig fin press">🏅 오늘 끝! 내일 또 만나요</button>');
   gb.onclick = () => next ? startTask(next.id) : (confetti(), say('오늘의 한글 끝! 내일 또 만나요'));
-  const tmr = h(`<div class="tmr">내일 배울 것 ▶ <b>${lessonAt(d.lesson + 1).title}</b></div>`);
+  const nd = nextDay({ ...d, done: true });
+  const tmr = h(d.mode === 'exam' && !K().units[d.unit] ? `<div class="tmr">통과하면 ▶ <b>${lessonAt(d.lesson + 1).title}</b></div>`
+    : nd.mode === 'exam' ? `<div class="tmr">내일 ▶ <b>🎓 승급 시험</b></div>`
+    : `<div class="tmr">내일 배울 것 ▶ <b>${lessonAt(nd.lesson).title}</b></div>`);
   const foot = h('<div class="dfoot"></div>'); foot.append(h(weekStrip()), streakEl());
   const dgo = h('<div class="dgo"></div>'); dgo.append(gb, tmr);
   m.append(heroEl(l), tl, foot, dgo);
@@ -855,6 +913,8 @@ function daily() {
   else if (!any) {
     if (l.kind === 'letter') say('오늘의 글자', 250, phon(l.hero), 400, info(l.hero).w);
     else if (l.kind === 'review') say('오늘은 복습하는 날!');
+    else if (l.kind === 'exam') say('오늘은 승급 시험!', 300, '몸풀기 하고 도전하자!');
+    else if (l.kind === 'fix') say('오늘은 헷갈린 글자 복습!', 300, '내일 다시 시험 보자!');
     else say('오늘 배울 글자', 300, ...l.syl.slice(0, 3).flatMap(s => [s, 250]));
   }
 }
@@ -871,6 +931,7 @@ function startTask(id) {
   else if (id === 'puzzle') go(puzzle);
   else if (id === 'review') go(review);
   else if (id === 'wtrace') go(traceWord, dmWord(1, 3));
+  else if (id === 'chal' || id === 'exam') go(testRun, id);
 }
 // 오늘 과의 낱말 하나 (없으면 오늘 글자가 들어간 낱말, 그것도 없으면 오늘 글자 하나)
 function dmWord(min, max) {
@@ -976,17 +1037,130 @@ function review() {
         over = true; b.classList.add('good'); $$('.qo', ch).forEach(e => { if (e !== b) e.classList.add('no'); });
         $$('.rword button', top).forEach(e => e.classList.add('lit'));
         SFX.ok(); say(...q.done);
-        if (!q.wrong) { addStar(b); report('review'); } else oops();
+        if (!q.wrong) { addStar(b); report('review'); recordHit(q.ans); } else oops();
         setTimeout(() => { if (box.isConnected && !$('.ov')) next(); }, 2000);
       } else {
         SFX.no(); bounce(b, 'shake'); b.classList.add('no'); say(...o.say);
         if (!q.again) { q.again = true; retry.push({ ...q, wrong: false, opts: shuffle(q.opts) }); }
+        if (!q.wrong && q.ty !== 'readW') recordMiss(q.ans, o.val);
         q.wrong = true; thinkLock(ch, q.ask);
       }
     });
   }
   next();
 }
+/* ───────── 🎯 오늘의 도전 · 🎓 승급 시험 ─────────
+   처음 누른 답으로 채점 (틀리면 정답을 보여 주고 다음 문제). 하루에 한 번만 — 중간에 나가도 푼 것은 그대로.
+   도전: 오늘 것 + 예전 것. 통과하면 그날 코인 2개 (못 넘어도 1개는 그대로).
+   시험: 그 단원 것 70% + 예전 것 30%. 통과하면 🎖️ + 코인 3개 + 다음 단원, 못 넘으면 내일 헷갈린 글자 복습 → 모레 다시. */
+let weakBoost = true;
+function testRun(kind) {
+  const d = dayState(), [N, P] = TEST[kind][kid], isExam = kind === 'exam';
+  topbar(isExam ? '🎓 승급 시험' : '🎯 오늘의 도전', () => go(daily));
+  const m = mainEl('<div class="rq qz"></div>'), box = $('.qz', m);
+  if (d[kind]) return showEnd(d[kind]);
+  weakBoost = false; cleanups.push(() => { weakBoost = true; });
+  const L = learned();
+  const sub = (a, b) => ({ letters: L.letters.filter(x => x.i >= a && x.i <= b), syl: L.syl.filter(x => x.i >= a && x.i <= b), words: L.words.filter(x => x.i >= a && x.i <= b), today: b });
+  const U = UNITS[kid], lo = isExam ? (d.unit ? U[d.unit - 1][0] + 1 : 0) : L.today;
+  const main = sub(lo, L.today), old = isExam ? L : sub(0, L.today - 1);
+  const nMain = isExam ? Math.ceil(N * .7) : N - 2;
+  const plan = Array.from({ length: N }, (_, i) => i < nMain ? main : old);
+  const marks = d[kind + 'P'] || (d[kind + 'P'] = []);
+  const used = new Set();
+  const dots = h(`<div class="tdots">${'<i></i>'.repeat(N)}</div>`);
+  const paintDots = () => $$('i', dots).forEach((e, i) => { e.textContent = i < marks.length ? (marks[i] ? '⭕' : '❌') : ''; e.classList.toggle('cur', i === marks.length); });
+  function next() {
+    if (marks.length >= N) return end();
+    const pl = plan[(marks.length * 7) % N];    // 오늘 것과 예전 것이 섞이게
+    let q = null;
+    for (let t = 0; t < 12 && !q; t++) { const c = makeQ(t < 8 ? pl : L); if (c && (!used.has(c.ans) || t === 11)) q = c; }
+    if (!q) return end();
+    used.add(q.ans); show(q);
+  }
+  function show(q) {
+    box.innerHTML = ''; paintDots();
+    const top = h(`<div class="qtop">${q.show}</div>`);
+    const ch = h(`<div class="choices">${q.opts.map((o, i) => `<button class="ch qo press ${o.cls || ''}" data-i="${i}">${o.html}</button>`).join('')}</div>`);
+    box.append(dots, top, ch);
+    const big = $('.qbig', top); if (big && q.tap) big.onclick = () => { bounce(big); say(...q.tap); };
+    $$('.rword button', top).forEach(b => b.onclick = () => { $$('.rword button', top).forEach(o => o.classList.remove('lit')); b.classList.add('lit'); bounce(b); say(b.textContent); });
+    if (q.ask) setTimeout(() => say(...q.ask), 250);
+    let over = false;
+    $$('.qo', ch).forEach(b => b.onclick = () => {
+      if (over) return; over = true;
+      const o = q.opts[+b.dataset.i], ok = o.val === q.ans;
+      const good = $$('.qo', ch).find(e => q.opts[+e.dataset.i].val === q.ans);
+      good.classList.add('good'); $$('.qo', ch).forEach(e => { if (e !== good) e.classList.add('no'); });
+      $$('.rword button', top).forEach(e => e.classList.add('lit'));
+      marks.push(ok); save(); paintDots();
+      if (ok) { SFX.ok(); say(...q.done); addStar(b); recordHit(q.ans); }
+      else { SFX.no(); bounce(b, 'shake'); if (q.ty !== 'readW') recordMiss(q.ans, o.val); say('정답은', 300, ...q.done); bounce(good, 'pop'); }
+      setTimeout(() => { if (box.isConnected && !$('.ov')) next(); else if (box.isConnected) { const w = setInterval(() => { if (!box.isConnected) clearInterval(w); else if (!$('.ov')) { clearInterval(w); next(); } }, 400); } }, ok ? 1900 : 3000);
+    });
+  }
+  function end() {
+    const score = marks.filter(Boolean).length, r = { score, n: N, ok: score >= P, marks: marks.slice() };
+    d[kind] = r;
+    if (isExam && r.ok) { K().units[d.unit] = d.date; K().medals = (K().medals || 0) + 1; }
+    save(); showEnd(r, true);
+  }
+  function showEnd(r, fresh) {
+    box.innerHTML = '';
+    const link = !!S.house;
+    const title = r.ok ? (isExam ? '🎓 승급 성공!' : '🎯 도전 성공!') : isExam ? '조금만 더!' : '아쉽다!';
+    const note = r.ok ? (isExam ? `🎖️ 메달${link ? ' · 🪙 3개' : ''} · 다음 단원으로!` : link ? '오늘 코인 🪙 2개!' : '정말 잘했어!')
+      : isExam ? '내일은 헷갈린 글자 복습, 모레 다시 도전!' : '내일 또 도전해요!';
+    const el = h(`<div class="tend"><div class="tbig">${r.ok ? (isExam ? '🎖️' : '🏆') : '💪'}</div><div class="tmsg">${title}</div>
+      <div class="tscore">${(r.marks || []).map(x => x ? '⭕' : '❌').join('')}</div><div class="tsub">${r.n}개 중에 ${r.score}개 · ${note}</div>
+      <button class="gobig press">▶ 확인</button></div>`);
+    const done = (dayState().prog[kind] || 0) >= 1;
+    $('.gobig', el).onclick = () => done ? go(daily) : finishTask(kind);
+    box.append(el);
+    if (fresh) {
+      if (r.ok) { SFX.tada(); confetti(50); }
+      say(`${r.n}개 중에`, 200, `${r.score}개!`, 400, r.ok ? (isExam ? '승급 성공! 메달이야!' : '도전 성공!') : isExam ? '조금만 더 연습하고 다시 하자!' : '아쉽다! 내일 또 도전!');
+    }
+  }
+  next();
+}
+function finishTask(id) {
+  const d = dayState(), t = dailyTasks().find(t => t.id === id);
+  d.prog[id] = t ? t.n : 1; save();
+  if (DM) DM.finished = true;
+  taskDone();
+}
+/* 🩹 헷갈리는 글자: 틀린 답과 정답을 비교해서 다른 자모를 기록 (받침은 '받침ㄴ'), 한 번에 맞히면 조금씩 줄어듦 */
+const isSylCh = ch => /[가-힣]/.test(ch);
+function jamoKeys(v) {
+  const s = typeof v === 'string' ? v : v && v.w || '';
+  if (s.length === 1 && !isSylCh(s)) return [s];
+  return [...s].filter(isSylCh).flatMap(ch => { const [c, vv, t] = decompose(ch); return [c, vv, ...(t ? ['받침' + t] : [])]; });
+}
+function recordMiss(a, b) {
+  const k = K(); k.miss = k.miss || {};
+  let keys = [];
+  if (a.length === 1 && !isSylCh(a)) keys = [a];
+  else if (b && [...a].length === [...b].length) [...a].forEach((s, i) => {
+    const B = [...b][i]; if (!isSylCh(s) || !isSylCh(B) || s === B) return;
+    const x = decompose(s), y = decompose(B);
+    if (x[0] !== y[0]) keys.push(x[0]);
+    if (x[1] !== y[1]) keys.push(x[1]);
+    if (x[2] !== y[2] && x[2]) keys.push('받침' + x[2]);
+  });
+  keys.forEach(j => k.miss[j] = Math.min(9, (k.miss[j] || 0) + 1));
+  if (keys.length) save();
+}
+function recordHit(a) {
+  const k = K(); if (!k.miss) return;
+  let ch = false;
+  jamoKeys(a).forEach(j => { if (k.miss[j]) { k.miss[j] -= .5; if (k.miss[j] <= 0) delete k.miss[j]; ch = true; } });
+  if (ch) save();
+}
+const weakList = (k = K()) => Object.entries(k.miss || {}).filter(([, n]) => n >= 1).sort((a, b) => b[1] - a[1]).slice(0, 8);
+const keyLabel = j => j.startsWith('받침') ? `<span class="wk">받침</span><span style="color:var(--t)">${j.slice(2)}</span>` : `<span style="color:var(--${isCons(j) ? 'c' : 'v'})">${j}</span>`;
+const keySay = j => j.startsWith('받침') ? [compose('ㅇ', 'ㅏ', j.slice(2))] : [phon(j)];
+
 function report(id) {
   if (!DM || DM.id !== id || DM.finished) return;
   const d = dayState(), t = dailyTasks().find(t => t.id === id); if (!t) return;
@@ -1009,10 +1183,15 @@ function dayDone() {
   if (d.done) return go(daily);
   d.done = true; k.log[d.date] = 1; save();
   const coin = giveCoin();
+  const chalOK = !!(d.chal && d.chal.ok), examOK = !!(d.exam && d.exam.ok);
+  const extra = [];
+  if (chalOK) extra.push(`hangul-${d.date}-chal`);
+  if (examOK) for (let i = 0; i < 3; i++) extra.push(`hangul-unit${d.unit}-${i}`);
+  const xc = queueCoins(extra);
   const st = streakOf(), big = st > 0 && st % 7 === 0, bonus = big ? giveStreakBonus() : {};
-  const coins = (coin ? 1 : 0) + (bonus.coins ? 5 : 0), egg = !!bonus.egg;
+  const coins = (coin ? 1 : 0) + xc + (bonus.coins ? 5 : 0), egg = !!bonus.egg;
   go(daily);
-  const ov = h(`<div class="ov"><div class="bigcard"><div style="font-size:46px">${big ? `🔥 ${st}일 연속!` : '오늘의 한글 끝!'}</div><div class="sticker">${egg ? (kid === 'arin' ? '👑' : '🌟') : big ? '🏆' : '🏅'}</div>
+  const ov = h(`<div class="ov"><div class="bigcard"><div style="font-size:46px">${big ? `🔥 ${st}일 연속!` : examOK ? '🎓 승급 성공!' : '오늘의 한글 끝!'}</div><div class="sticker">${egg ? (kid === 'arin' ? '👑' : '🌟') : big ? '🏆' : examOK ? '🎖️' : '🏅'}</div>
     ${egg ? `<div class="coinline" style="background:#FFE9F4;box-shadow:0 4px 0 #F49AC1">${specialEggName()}${kid === 'arin' ? '가' : '이'} 방에 왔어요!</div>` : ''}
     <div style="font-size:28px;color:var(--soft)">⭐ +${big ? 8 : 3}${big ? ' · 🏆 트로피' : ''}</div>
     ${coins ? `<div class="coinline">🪙 +${coins} <small>${kid === 'arin' ? '티니핑' : '포켓몬'} 방에 쏙!</small></div>` : ''}
@@ -1023,7 +1202,7 @@ function dayDone() {
   if (coins) setTimeout(SFX.coin, 1500);
   if (egg) say(`${st}일 연속!`, 300, kid === 'arin' ? '황금 하트가 왔어!' : '황금 알이 왔어!', 300, '특별한 친구가 들어 있대!');
   else if (big) say(`${st}일 연속!`, 300, '큰 선물이야!');
-  else if (coin) say('오늘의 한글 끝!', 300, '정말 잘했어!', 300, '코인 하나!');
+  else if (coins) say('오늘의 한글 끝!', 300, '정말 잘했어!', 300, '코인', 100, ['', '하나!', '두 개!', '세 개!', '네 개!', '다섯 개!'][coins] || `${coins}개!`);
   else say('오늘의 한글 끝!', 300, '정말 잘했어!');
   Array.from({ length: big ? 8 : 3 }, (_, i) => i * 300).forEach(ms => setTimeout(() => addStar($('.sticker', ov)), 600 + ms));
 }
@@ -1598,11 +1777,19 @@ async function eggToRoom(ref, c) {
     if (Array.isArray(h) && h.length < 6 && !h.includes(c.id)) await FB.F.updateDoc(ref, new FB.F.FieldPath('kids', c.k, ROOM_FIELD, 'home'), [...h, c.id]);
   } catch (e) { console.warn('egg home', e); }
 }
+// 도전·시험 보너스 코인 (연결 안 돼 있으면 0)
+function queueCoins(ids) {
+  if (!S.house || !ids.length) return 0;
+  const d = dayState().date;
+  ids.forEach(id => { if (!S.coinQ.some(c => c.k === kid && c.id === id)) S.coinQ.push({ k: kid, d, id }); });
+  save(); startFirebase().then(flushCoins);
+  return ids.length;
+}
 // 연결돼 있으면 오늘 코인 1개 (인터넷이 없으면 기기에 모아 뒀다가 다음에 보냄)
 function giveCoin() {
   if (!S.house) return false;
   const d = dayState().date;
-  if (!S.coinQ.some(c => c.k === kid && c.d === d)) S.coinQ.push({ k: kid, d });
+  if (!S.coinQ.some(c => c.k === kid && c.d === d && !c.id)) S.coinQ.push({ k: kid, d });
   save(); startFirebase().then(flushCoins);
   return true;
 }
@@ -1904,11 +2091,15 @@ function settings() {
     <h3>지금까지</h3>
     <table>${row('davin')}${row('arin')}</table>
     <h3>🪙 포켓몬·티니핑 방 연결</h3>
-    <div class="note">연결하면 오늘의 한글을 다 끝낸 날마다 다빈이는 포켓몬 방, 아린이는 티니핑 방에 코인 1개가 들어가요 (하루 한 개). 우리가족 앱과 같은 구글 계정과 가족 코드로 처음 한 번만 연결하면 돼요.</div>
+    <div class="note">연결하면 오늘의 한글을 다 끝낸 날마다 다빈이는 포켓몬 방, 아린이는 티니핑 방에 코인 1개가 들어가요. 🎯 오늘의 도전을 통과한 날은 2개, 🎓 승급 시험 통과는 3개 더. 우리가족 앱과 같은 구글 계정과 가족 코드로 처음 한 번만 연결하면 돼요.</div>
     <div id="link" style="margin-top:6px"></div>
     <h3>📅 오늘의 한글 — 오늘 글자</h3>
     <div class="note">하루 미션을 다 끝내면 다음 날 새 글자로 넘어가요. 너무 쉽거나 어려우면 여기서 바꿔 주세요.</div>
     ${['davin', 'arin'].map(k => `<div style="margin:6px 0">${KIDS[k].name}: <button class="sbtn" data-ls="${k}" data-d="-1">◀</button> <b data-lt="${k}"></b> <button class="sbtn" data-ls="${k}" data-d="1">▶</button></div>`).join('')}
+    <h3>🎓 승급 시험 · 🩹 헷갈리는 글자</h3>
+    ${['davin', 'arin'].map(k => { const x = S.kids[k], w = weakList(x);
+      return `<div style="margin:6px 0"><b>${KIDS[k].name}</b>: ${UNITS[k].map(([, n], u) => `<span class="medal ${x.units && x.units[u] ? 'on' : ''}">${x.units && x.units[u] ? '🎖️' : '⬜'} ${n}</span>`).join(' ')}
+        <br><small>요즘 헷갈리는 글자: ${w.length ? w.map(([j, n]) => `<b>${j.startsWith('받침') ? '받침 ' + j.slice(2) : j}</b>(${Math.round(n)})`).join(' · ') : '아직 없어요 👍'}</small></div>`; }).join('')}
     <h3>이렇게 써 보세요</h3>
     <ul>
       <li><b>아린</b> (처음): 🔊 소리 카드로 ㄱ~ㅁ 다섯 글자만 듣고 → ✏️ 따라 쓰기 → 🎈 풍선 놀이(ㄱㄴㄷㄹㅁ 단계). 익숙해지면 다음 다섯 글자로. 모음은 ㅏㅓㅗㅜㅡㅣ 먼저.</li>
@@ -1923,6 +2114,8 @@ function settings() {
       <li>🃏 <b>짝 맞추기</b>: 아린은 글자 ↔ 그림, 다빈은 낱말 ↔ 그림. 배운 것에서 나와요.</li>
       <li>📚 <b>그림책</b>: ⭐ 받침 없는 문장 4권, ⭐⭐ 받침 있는 문장 2권. 아린이는 페이지마다 읽어 줘요.</li>
       <li>🔥 <b>연속 출석</b>: 오늘의 한글을 7일 연속 끝내면 🏆 트로피 + ⭐ 5 + (방이 연결돼 있으면) 🪙 5개 더. 🏆 4개마다 방에 특별 알 (다빈 🌟 황금 알 = 전설의 포켓몬, 아린 👑 황금 하트 = 특별한 티니핑) — 주간 미션 황금 스티커 4개와 같은 속도.</li>
+      <li>🎯 <b>오늘의 도전</b>: 하루 미션 마지막에 다빈 5문제(4개 맞히면 통과, 80%), 아린 4문제(3개). 처음 누른 답으로 채점하고 하루 한 번만 — 통과하면 그날 코인 2개, 못 넘어도 1개는 그대로.</li>
+      <li>🎓 <b>승급 시험</b>: 단원(다빈 5단원, 아린 4단원) 마지막 과를 끝낸 다음 날. 10문제 중 다빈 8개, 아린 7개 맞히면 🎖️ 메달 + 코인 3개 + 다음 단원. 못 넘으면 다음 날 🩹 헷갈린 글자 복습, 그다음 날 다시 시험. 틀린 글자는 기록돼서 복습에 더 자주 나와요.</li>
       <li>🤔 <b>막 누르기 막기</b>: 틀리면 잠깐 생각 시간(눌러지지 않음)이 있고 문제를 다시 들려줘요. ⭐ 과 오늘의 미션 칸은 <b>한 번에 맞혔을 때만</b> 올라가요 (틀린 복습 문제는 나중에 다시 나와요). 글자 만들기는 두 번 틀리면 맞는 글자판이 반짝여요.</li>
       <li>별 10개마다 동물 스티커가 생겨요.</li>
     </ul>
@@ -1941,7 +2134,8 @@ function settings() {
   const withKid = (k, f) => { const was = kid; kid = k; try { return f(); } finally { kid = was; } };
   const showLesson = () => $$('[data-lt]', ov).forEach(e => withKid(e.dataset.lt, () => { const d = dayState(); e.textContent = `${curLesson(d).title} (${d.lesson + 1}번째)`; }));
   $$('[data-ls]', ov).forEach(b => b.onclick = () => withKid(b.dataset.ls, () => {
-    const d = dayState(); d.lesson = Math.max(0, d.lesson + +b.dataset.d); d.prog = {}; d.done = false; save(); showLesson();
+    const d = dayState(); d.lesson = Math.max(0, d.lesson + +b.dataset.d); d.prog = {}; d.done = false;
+    ['mode', 'unit', 'chal', 'chalP', 'exam', 'examP'].forEach(x => delete d[x]); save(); showLesson();
   }));
   showLesson();
   $('#close', ov).onclick = () => { ov.remove(); go(home); };
