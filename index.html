@@ -256,6 +256,61 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
 .coinline{font-size:44px;background:#FFF4C7;border-radius:999px;padding:4px 26px;box-shadow:0 4px 0 #F2C94C;animation:popin .5s 1.4s both cubic-bezier(.3,1.6,.5,1)}
 .coinline small{font-size:24px;color:var(--soft)}
 
+/* 메뉴 칸이 많을 때 */
+.acts.n8{grid-template-columns:repeat(4,1fr);max-width:1140px}
+.acts.many{gap:16px}
+.acts.many .ic{font-size:min(9.5vmin,78px)}
+.acts.many .lb{font-size:min(4vmin,32px)}
+.acts.many .ex{font-size:min(2.7vmin,20px)}
+@media (orientation:portrait){.acts.n8{grid-template-columns:repeat(2,1fr)}}
+
+/* 🐾 친구 이름 */
+.cimg{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
+.cimg-x{font-size:60px}
+.charpic{width:min(30vmin,240px);height:min(30vmin,240px);background:#fff;border-radius:44px;padding:10px;box-shadow:0 8px 0 var(--line);position:relative}
+.charpic::after{content:"🔊";position:absolute;right:-10px;bottom:-6px;font-size:30px;background:var(--kid);border-radius:50%;width:54px;height:54px;display:grid;place-items:center}
+.pslot .ghost{font-style:normal;color:rgba(74,59,42,.16)}
+.ch.chc{padding:10px}
+.dexg{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
+.dexg .wt{padding:8px 6px 6px}
+.dexg .wt .cimg{width:96px;height:96px}
+.dexg .wt .w{font-size:22px}
+.dexg .wt.shadow .cimg{filter:brightness(0);opacity:.18}
+.dance{animation:dance 1.1s ease-in-out 2}
+@keyframes dance{0%,100%{transform:translateY(0) rotate(0)}20%{transform:translateY(-34px) rotate(-10deg)}45%{transform:translateY(0) rotate(0) scale(1.08,.92)}70%{transform:translateY(-22px) rotate(10deg)}}
+
+/* 🃏 짝 맞추기 */
+.memg{flex:1;min-height:0;width:100%;max-width:900px;display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:16px;align-content:center;justify-items:center}
+.mc{width:100%;max-width:190px;aspect-ratio:1;position:relative;perspective:600px;max-height:28vh}
+.mf{position:absolute;inset:0;border-radius:28px;display:grid;place-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;transition:transform .35s;box-shadow:0 6px 0 rgba(0,0,0,.08)}
+.mback{background:var(--kid);font-size:min(8vmin,60px)}
+.mfront{background:#fff;transform:rotateY(180deg);font-size:min(12vmin,96px)}
+.mfront.mw{font-size:min(6.5vmin,50px)}
+.mc.up .mback{transform:rotateY(-180deg)}
+.mc.up .mfront{transform:rotateY(0)}
+.mc.got .mfront{background:#E4F8EC;box-shadow:0 6px 0 var(--ok)}
+
+/* 📚 그림책 */
+.shelf2{flex:1;width:100%;max-width:1000px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-content:center}
+@media (orientation:portrait){.shelf2{grid-template-columns:repeat(2,1fr)}}
+.book{background:#fff;border-radius:22px 34px 34px 22px;border-left:14px solid var(--kid);padding:18px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 7px 0 var(--line)}
+.book .bc{font-size:min(13vmin,100px);line-height:1.1}
+.book .bt{font-size:min(4.4vmin,32px)}
+.book .bl{font-size:20px}
+.page{flex:1;min-height:0;width:100%;max-width:1000px;display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;background:#fff;border-radius:40px;box-shadow:0 8px 0 var(--line);padding:16px}
+.scene{font-size:min(22vmin,170px);line-height:1.1;letter-spacing:.05em}
+.sent{display:flex;flex-wrap:wrap;gap:10px 18px;justify-content:center;font-size:min(9vmin,70px)}
+.wd{padding:2px 10px;border-radius:18px}
+.wd.lit{background:var(--kid3);box-shadow:0 4px 0 var(--kid)}
+.page .dots{display:flex;gap:8px}
+.page .dots i{width:14px;height:14px;border-radius:50%;background:var(--line)}
+.page .dots i.on{background:var(--kid2)}
+
+/* 🔥 연속 출석 */
+.streak{font-size:26px;background:#fff;border-radius:999px;padding:6px 20px;box-shadow:0 4px 0 var(--line);flex:none}
+.streak b{font-weight:400;color:#E8590C}
+.streak small{font-size:20px;color:var(--soft)}
+
 /* settings */
 .sheet{background:#fff;border-radius:34px;padding:26px 30px;width:min(94vw,680px);max-height:90vh;overflow-y:auto;font-family:system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;font-size:18px;line-height:1.5;user-select:text;-webkit-user-select:text}
 .sheet h2{font-family:var(--font);font-weight:400;font-size:30px;margin:0 0 8px}
@@ -437,7 +492,7 @@ let S = null;
 try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
 S = Object.assign({ rate: .8, voice: '' }, S || {});
 S.kids = S.kids || {};
-const freshKid = () => ({ stars: 0, heard: {}, traced: {}, wtraced: {}, solved: {}, read: {}, bal: 0, log: {}, dm: null });
+const freshKid = () => ({ stars: 0, heard: {}, traced: {}, wtraced: {}, solved: {}, read: {}, bal: 0, log: {}, dm: null, dex: {}, books: {}, mem: 0, trophies: 0 });
 for (const k of ['davin', 'arin']) S.kids[k] = Object.assign(freshKid(), S.kids[k] || {});
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 const KIDS = { davin: { name: '다빈', img: 'avatar-davin.png' }, arin: { name: '아린', img: 'avatar-arin.png' } };
@@ -526,8 +581,9 @@ function addStar(fromEl) {
       st.remove(); target.textContent = k.stars; bounce(target.parentElement, 'bump');
     };
   } else if (target) { target.textContent = k.stars; bounce(target.parentElement, 'bump'); }
+  const nth = k.stars / 10;   // 지금 받은 별로 몇 번째 스티커인지 (별이 연달아 들어와도 맞게)
   if (k.stars % 10 === 0) setTimeout(() => {
-    const s = STICKERS[(k.stars / 10 - 1) % STICKERS.length];
+    const s = STICKERS[(nth - 1) % STICKERS.length];
     const ov = h(`<div class="ov"><div class="bigcard"><div style="font-size:40px">새 스티커!</div><div class="sticker">${s}</div><div class="row"><button class="rb go press">좋아! 👍</button></div></div></div>`);
     ov.onclick = () => ov.remove(); document.body.append(ov); SFX.tada(); confetti(50); say('새 스티커!');
   }, 1300);
@@ -570,6 +626,9 @@ function home() {
 
 /* ───────── 아이별 메뉴 ───────── */
 const ACTS = {
+  friends: { ic: '🐾', t: '친구 이름', ex: '피카츄 · 하츄핑', bg: '#FFF0B8', fn: () => friends() },
+  memory: { ic: '🃏', t: '짝 맞추기', ex: '카드 뒤집기', bg: '#DDF3FF', fn: () => memory() },
+  books: { ic: '📚', t: '그림책', ex: '한 장씩 읽어요', bg: '#E9F7D6', fn: () => books() },
   review: { ic: '🔁', t: '복습', ex: '배운 것 섞어서', bg: '#FFE3F1', fn: () => review() },
   cards: { ic: '🔊', t: '소리 카드', ex: 'ㄱ 그 · 기차', bg: '#CFE8FF', fn: () => cards() },
   trace: { ic: '✏️', t: '따라 쓰기', ex: '손가락으로 써요', bg: '#D3F5D9', fn: () => tracePick() },
@@ -578,7 +637,7 @@ const ACTS = {
   puzzle: { ic: '🧩', t: '낱말 퍼즐', ex: '바 + 나 + 나', bg: '#E6DCFF', fn: () => puzzle() },
   read: { ic: '📖', t: '읽고 찾기', ex: '읽고 그림 톡!', bg: '#D3F3EE', fn: () => readQuiz() },
 };
-const MENU = { davin: ['review', 'blocks', 'puzzle', 'read', 'trace', 'balloon'], arin: ['review', 'cards', 'trace', 'balloon', 'blocks'] };
+const MENU = { davin: ['friends', 'review', 'books', 'blocks', 'puzzle', 'read', 'memory', 'trace', 'balloon'], arin: ['friends', 'cards', 'memory', 'books', 'review', 'trace', 'balloon', 'blocks'] };
 function menu() {
   DM = null;
   document.body.className = kid;
@@ -591,7 +650,7 @@ function menu() {
   ban.onclick = () => { SFX.tap(); go(daily); };
   m.append(ban);
   const ids = MENU[kid];
-  const grid = h(`<div class="acts ${ids.length === 4 ? 'n4' : ''}"></div>`);
+  const grid = h(`<div class="acts ${ids.length === 4 ? 'n4' : ids.length === 8 ? 'n8 many' : ids.length > 6 ? 'many' : ''}"></div>`);
   ids.forEach(id => {
     const a = ACTS[id];
     const b = h(`<button class="act press" style="background:${a.bg}"><div class="ic">${a.ic}</div><div class="lb">${a.t}</div><div class="ex">${a.ex}</div></button>`);
@@ -600,7 +659,7 @@ function menu() {
   });
   m.append(grid);
   const st = stickersOf(kid);
-  m.append(h(`<div class="shelf"><small>내 스티커</small>${st.length ? st.join('') : '<small>별 10개 모으면 생겨요 ⭐</small>'}</div>`));
+  m.append(h(`<div class="shelf"><small>내 스티커</small>${K().trophies ? '🏆'.repeat(K().trophies) + ' ' : ''}${st.length ? st.join('') : '<small>별 10개 모으면 생겨요 ⭐</small>'}</div>`));
 }
 
 /* ───────── 📅 오늘의 한글: 매일 미션 ─────────
@@ -735,7 +794,7 @@ function daily() {
   const gb = next ? h(`<button class="gobig press">▶ ${any ? '이어서' : '시작'}</button>`) : h('<button class="gobig fin press">🏅 오늘 끝! 내일 또 만나요</button>');
   gb.onclick = () => next ? startTask(next.id) : (confetti(), say('오늘의 한글 끝! 내일 또 만나요'));
   const tmr = h(`<div class="tmr">내일 배울 것 ▶ <b>${lessonAt(d.lesson + 1).title}</b></div>`);
-  m.append(heroEl(l), tl, h(weekStrip()), gb, tmr);
+  m.append(heroEl(l), tl, h(weekStrip()), streakEl(), gb, tmr);
   if (!next) say('오늘의 한글 끝! 내일 또 만나요');
   else if (!any) {
     if (l.kind === 'letter') say('오늘의 글자', 250, phon(l.hero), 400, info(l.hero).w);
@@ -892,17 +951,21 @@ function dayDone() {
   if (d.done) return go(daily);
   d.done = true; k.log[d.date] = 1; save();
   const coin = giveCoin();
+  const st = streakOf(), big = st > 0 && st % 7 === 0, bonus = big && giveStreakBonus();
+  const coins = (coin ? 1 : 0) + (bonus ? 5 : 0);
   go(daily);
-  const ov = h(`<div class="ov"><div class="bigcard"><div style="font-size:46px">오늘의 한글 끝!</div><div class="sticker">🏅</div>
-    <div style="font-size:28px;color:var(--soft)">⭐ +3</div>
-    ${coin ? `<div class="coinline">🪙 +1 <small>${kid === 'arin' ? '티니핑' : '포켓몬'} 방에 쏙!</small></div>` : ''}
+  const ov = h(`<div class="ov"><div class="bigcard"><div style="font-size:46px">${big ? `🔥 ${st}일 연속!` : '오늘의 한글 끝!'}</div><div class="sticker">${big ? '🏆' : '🏅'}</div>
+    <div style="font-size:28px;color:var(--soft)">⭐ +${big ? 8 : 3}${big ? ' · 🏆 트로피' : ''}</div>
+    ${coins ? `<div class="coinline">🪙 +${coins} <small>${kid === 'arin' ? '티니핑' : '포켓몬'} 방에 쏙!</small></div>` : ''}
     <div class="row"><button class="gobig press">좋아! 👍</button></div></div></div>`);
   $('.gobig', ov).onclick = () => { ov.remove(); go(daily); };
   document.body.append(ov);
   SFX.tada(); confetti(60);
-  if (coin) { setTimeout(SFX.coin, 1500); say('오늘의 한글 끝!', 300, '정말 잘했어!', 300, '코인 하나!'); }
+  if (coins) setTimeout(SFX.coin, 1500);
+  if (big) say(`${st}일 연속!`, 300, '큰 선물이야!');
+  else if (coin) say('오늘의 한글 끝!', 300, '정말 잘했어!', 300, '코인 하나!');
   else say('오늘의 한글 끝!', 300, '정말 잘했어!');
-  [0, 350, 700].forEach(ms => setTimeout(() => addStar($('.sticker', ov)), 600 + ms));
+  Array.from({ length: big ? 8 : 3 }, (_, i) => i * 300).forEach(ms => setTimeout(() => addStar($('.sticker', ov)), 600 + ms));
 }
 
 /* ───────── 🔊 소리 카드 ───────── */
@@ -1449,7 +1512,7 @@ function flushCoins() {
   if (!FB.user || !S.house || !S.coinQ.length) return;
   const F = FB.F, ref = F.doc(FB.db, 'households', S.house);
   for (const c of S.coinQ.splice(0)) {
-    F.updateDoc(ref, new F.FieldPath('kids', c.k, ROOM_FIELD, 'items', 'hangul-' + c.d), 'coin')
+    F.updateDoc(ref, new F.FieldPath('kids', c.k, ROOM_FIELD, 'items', c.id || 'hangul-' + c.d), 'coin')
       .catch(e => { console.warn('coin', e); S.coinQ.push(c); save(); });
   }
   save();
@@ -1495,6 +1558,238 @@ function refreshLink() {
   $('#gout').onclick = async () => { if (!confirm('연결을 끊을까요? 그 뒤로는 코인이 방에 들어가지 않아요.')) return; S.house = null; S.coinQ = []; save(); await FB.A.signOut(FB.auth); refreshLink(); };
 }
 
+/* ───────── 🐾 친구 이름: 포켓몬(다빈) · 티니핑(아린) 이름으로 글자 놀이 ─────────
+   이름 목록은 our-family/stickers-shared.js 의 DEX · PING 에서 뽑음 (새 캐릭터를 넣으면 여기도 한 줄).
+   그림은 우리가족 앱 폴더(../our-family/poke/art, ../our-family/ping)를 그대로 씀 */
+const POKE_NAMES = [[1,"이상해씨"],[2,"이상해풀"],[3,"이상해꽃"],[4,"파이리"],[5,"리자드"],[6,"리자몽"],[7,"꼬부기"],[8,"어니부기"],[9,"거북왕"],[10,"캐터피"],[11,"단데기"],[12,"버터플"],[13,"뿔충이"],[14,"딱충이"],[15,"독침붕"],[16,"구구"],[17,"피죤"],[18,"피죤투"],[19,"꼬렛"],[20,"레트라"],[21,"깨비참"],[22,"깨비드릴조"],[23,"아보"],[24,"아보크"],[25,"피카츄"],[26,"라이츄"],[27,"모래두지"],[28,"고지"],[30,"니드리나"],[31,"니드퀸"],[33,"니드리노"],[34,"니드킹"],[35,"삐삐"],[36,"픽시"],[37,"식스테일"],[38,"나인테일"],[39,"푸린"],[40,"푸크린"],[41,"주뱃"],[42,"골뱃"],[43,"뚜벅쵸"],[44,"냄새꼬"],[45,"라플레시아"],[46,"파라스"],[47,"파라섹트"],[48,"콘팡"],[49,"도나리"],[50,"디그다"],[51,"닥트리오"],[52,"나옹"],[53,"페르시온"],[54,"고라파덕"],[55,"골덕"],[56,"망키"],[57,"성원숭"],[58,"가디"],[59,"윈디"],[60,"발챙이"],[61,"슈륙챙이"],[62,"강챙이"],[63,"캐이시"],[64,"윤겔라"],[65,"후딘"],[66,"알통몬"],[67,"근육몬"],[68,"괴력몬"],[69,"모다피"],[70,"우츠동"],[71,"우츠보트"],[72,"왕눈해"],[73,"독파리"],[74,"꼬마돌"],[75,"데구리"],[76,"딱구리"],[77,"포니타"],[78,"날쌩마"],[79,"야돈"],[80,"야도란"],[81,"코일"],[82,"레어코일"],[83,"파오리"],[84,"두두"],[85,"두트리오"],[86,"쥬쥬"],[87,"쥬레곤"],[88,"질퍽이"],[89,"질뻐기"],[90,"셀러"],[91,"파르셀"],[92,"고오스"],[93,"고우스트"],[94,"팬텀"],[95,"롱스톤"],[96,"슬리프"],[97,"슬리퍼"],[98,"크랩"],[99,"킹크랩"],[100,"찌리리공"],[101,"붐볼"],[102,"아라리"],[103,"나시"],[104,"탕구리"],[105,"텅구리"],[106,"시라소몬"],[107,"홍수몬"],[108,"내루미"],[109,"또가스"],[110,"또도가스"],[111,"뿔카노"],[112,"코뿌리"],[113,"럭키"],[114,"덩쿠리"],[115,"캥카"],[116,"쏘드라"],[117,"시드라"],[118,"콘치"],[119,"왕콘치"],[120,"별가사리"],[121,"아쿠스타"],[122,"마임맨"],[123,"스라크"],[124,"루주라"],[125,"에레브"],[126,"마그마"],[127,"쁘사이저"],[128,"켄타로스"],[129,"잉어킹"],[130,"갸라도스"],[131,"라프라스"],[132,"메타몽"],[133,"이브이"],[134,"샤미드"],[135,"쥬피썬더"],[136,"부스터"],[137,"폴리곤"],[138,"암나이트"],[139,"암스타"],[140,"투구"],[141,"투구푸스"],[142,"프테라"],[143,"잠만보"],[144,"프리져"],[145,"썬더"],[146,"파이어"],[147,"미뇽"],[148,"신뇽"],[149,"망나뇽"],[150,"뮤츠"],[151,"뮤"]];
+const PING_NAMES = [["heartsping1","하츄핑"],["aloneping","홀로핑"],["artping","그림핑"],["auroraping","오로라핑"],["balletping","발레핑"],["bebeping","베베핑"],["blankping","깜빡핑"],["bonnyping","뽀니핑"],["buddyping","짝짝핑"],["chachaping","차차핑"],["charmping","아잉핑"],["claireping","아름핑"],["coolping","덜덜핑"],["cozyping","포근핑"],["curieping","모야핑"],["dadaping","바로핑"],["dajoping","다조핑"],["dareping","부투핑"],["dianaping","다이아나핑"],["dreamping","띠용핑"],["eclipseping","이클립스핑"],["egoping","앙대핑"],["floraping","플라핑"],["fluffyping","포실핑"],["freezeping","꽁꽁핑"],["giftping","주네핑"],["giggleping","악동핑"],["gogoping","아자핑"],["goodping","차캐핑"],["happying","해핑"],["heavyping","무거핑"],["jellyping","말랑핑"],["joahping","조아핑"],["kikiping","키키핑"],["ladyping","공쥬핑"],["lalaping","라라핑"],["luckyping","행운핑"],["luvping","바네핑"],["memoping","메모핑"],["mimicping","따라핑"],["moseyping","차나핑"],["nanaping","나나핑"],["narrping","나르핑"],["nonoping","시러핑"],["noraping","노라핑"],["noriping","노리핑"],["okeydokeyping","꾸래핑"],["onlyping","다해핑"],["oppoping","꺼꿀핑"],["owwping","아야핑"],["patping","토닥핑"],["princeping","왕자핑"],["roarping","화나핑"],["sculptping","뚝딱핑"],["shashaping","샤샤핑"],["shimmerping","빛나핑"],["shushping","똑똑핑"],["shyping","부끄핑"],["sighping","아휴핑"],["sleeping","코자핑"],["sparkleping","초롱핑"],["sparkping","찌릿핑"],["spookping","무셔핑"],["stickping","딱풀핑"],["sweetping","달콤핑"],["tangyping","새콤핑"],["teeheeping","방글핑"],["tickleping","까르핑"],["tidyping","싹싹핑"],["timidping","쪼꼼핑"],["toyping","토이핑"],["trueping","솔찌핑"],["trustping","믿어핑"],["tutuping","투투핑"],["tweetping","떠벌핑"],["twinkleping","빤짝핑"],["wannabeping","또까핑"],["weeping","주르핑"],["wishping","소원핑"],["wonderping","원더핑"],["yummyping","맛나핑"],["zipping","씽씽핑"]];
+const CHARS = () => kid === 'arin'
+  ? PING_NAMES.map(([id, n]) => ({ id, n, img: `../our-family/ping/${id}.webp` }))
+  : POKE_NAMES.map(([id, n]) => ({ id: String(id), n, img: `../our-family/poke/art/${id}.png` }));
+// 읽기 어려움: 1 = 기본 자음·모음만, 2 = 쌍자음·겹모음, 3 = 받침
+function nameTier(w) {
+  let t = 1;
+  for (const s of w) { const [c, v, b] = decompose(s); if (b) t = 3; else if (!CJ.includes(c) || !VJ.includes(v)) t = Math.max(t, 2); }
+  return t;
+}
+// 다빈이가 배운 만큼: 새 모음·쌍자음 과(15과~)부터 2단계, 받침 과(22과~)부터 3단계
+const tierNow = () => { const n = dayState().lesson; return n >= 21 ? 3 : n >= 14 ? 2 : 1; };
+const charImg = (x, cls = '') => `<img class="cimg ${cls}" src="${x.img}" alt="" draggable="false" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'cimg-x',textContent:'${kid === 'arin' ? '💖' : '⚪'}'}))">`;
+let lastChar = '';
+function pickChar(maxTier) {
+  const dex = K().dex, all = CHARS().filter(x => x.id !== lastChar && (!maxTier || nameTier(x.n) <= maxTier) && [...x.n].length <= 4);
+  const fresh = all.filter(x => !dex[x.id]);
+  const x = rnd(fresh.length && Math.random() < .75 ? fresh : all); lastChar = x.id; return x;
+}
+function befriend(x, el) {
+  const isNew = !K().dex[x.id];
+  K().dex[x.id] = 1; save();
+  bounce(el, 'dance'); SFX.tada(); confetti(30);
+  say(x.n, 400, isNew ? '친구가 됐어!' : '또 만났네!');
+  addStar(el);
+}
+function friends(tab = 'puzzle') {
+  const name = kid === 'arin' ? '💖 티니핑 이름' : '🐾 포켓몬 이름';
+  topbar(name, () => go(menu));
+  const m = mainEl();
+  const total = CHARS().length, got = Object.keys(K().dex).filter(id => CHARS().some(x => x.id === id)).length;
+  const tabList = kid === 'arin' ? [['puzzle', '🧩 이름 맞추기'], ['dex', `📒 도감 ${got}/${total}`]]
+    : [['puzzle', '🧩 이름 맞추기'], ['read', '📖 이름 읽기'], ['dex', `📒 도감 ${got}/${total}`]];
+  m.append(tabs(tabList, tab, t => go(friends, t)));
+  if (tab === 'dex') return friendsDex(m);
+  if (tab === 'read') return friendsRead(m);
+  // 🧩 이름 맞추기: 그림을 보고 이름 조각 맞추기 (아린: 빈칸에 글자 모양이 흐리게 보임)
+  const x = pickChar(kid === 'arin' ? 0 : Math.random() < .8 ? tierNow() : 0);
+  const syl = [...x.n], ghost = kid === 'arin';
+  const pool = [...new Set(CHARS().flatMap(y => [...y.n]))].filter(s => !syl.includes(s));
+  const tilesData = shuffle([...syl, ...shuffle(pool).slice(0, kid === 'arin' ? 1 : 2)]);
+  const box = h(`<div class="pz"><button class="charpic press">${charImg(x)}</button>
+    <div class="slots">${syl.map(s => `<button class="pslot">${ghost ? `<i class="ghost">${s}</i>` : ''}</button>`).join('')}</div>
+    <div class="tiles">${tilesData.map((s, i) => `<button class="tile press" data-i="${i}">${s}</button>`).join('')}</div>
+    <button class="nextbtn hidden">다음 ▶</button></div>`);
+  m.append(box);
+  const pic = $('.charpic', box), slots = $$('.pslot', box), tiles = $$('.tile', box), filled = syl.map(() => null);
+  let locked = false;
+  const clearSlot = i => { slots[i].innerHTML = ghost ? `<i class="ghost">${syl[i]}</i>` : ''; slots[i].classList.remove('full'); filled[i] = null; };
+  pic.onclick = () => { bounce(pic); say(x.n); };
+  tiles.forEach(t => t.onclick = () => {
+    if (locked || t.classList.contains('used')) return;
+    const at = filled.indexOf(null); if (at < 0) return;
+    filled[at] = +t.dataset.i; t.classList.add('used');
+    slots[at].textContent = t.textContent; slots[at].classList.add('full'); bounce(slots[at], 'pop'); say(t.textContent);
+    if (!filled.includes(null)) setTimeout(check, 500);
+  });
+  slots.forEach((sl, i) => sl.onclick = () => { if (locked || filled[i] === null) return; tiles[filled[i]].classList.remove('used'); clearSlot(i); });
+  function check() {
+    if (filled.map(i => tilesData[i]).join('') === x.n) {
+      locked = true; slots.forEach(s => s.classList.add('good'));
+      befriend(x, pic);
+      const nb = $('.nextbtn', box); nb.classList.remove('hidden'); nb.onclick = () => go(friends, 'puzzle');
+    } else {
+      SFX.no();
+      filled.forEach((ti, i) => { if (tilesData[ti] !== syl[i]) { bounce(slots[i], 'shake'); setTimeout(() => { tiles[ti].classList.remove('used'); clearSlot(i); }, 550); } });
+      setTimeout(() => say(x.n), 700);
+    }
+  }
+  setTimeout(() => { bounce(pic); say(x.n); }, 300);
+}
+// 📖 이름 읽기 (다빈): 이름을 읽고 맞는 친구 고르기
+function friendsRead(m) {
+  const x = pickChar(tierNow()), others = shuffle(CHARS().filter(y => y.id !== x.id)).slice(0, 2), opts = shuffle([x, ...others]);
+  const box = h(`<div class="rq"><div class="rword">${[...x.n].map(s => `<button>${s}</button>`).join('')}</div>
+    <div class="hint">이름을 읽고 친구를 찾아요 · 글자를 누르면 소리가 나요</div>
+    <div class="choices">${opts.map((o, i) => `<button class="ch chc press" data-i="${i}">${charImg(o)}</button>`).join('')}</div>
+    <button class="nextbtn hidden">다음 ▶</button></div>`);
+  m.append(box);
+  $$('.rword button', box).forEach(b => b.onclick = () => { $$('.rword button', box).forEach(o => o.classList.remove('lit')); b.classList.add('lit'); bounce(b); say(b.textContent); });
+  let over = false;
+  $$('.ch', box).forEach(b => b.onclick = () => {
+    if (over) return;
+    const o = opts[+b.dataset.i];
+    if (o === x) {
+      over = true; b.classList.add('good'); $$('.ch', box).forEach(e => { if (e !== b) e.classList.add('no'); });
+      $$('.rword button', box).forEach(e => e.classList.add('lit'));
+      befriend(x, b);
+      const nb = $('.nextbtn', box); nb.classList.remove('hidden'); nb.onclick = () => go(friends, 'read');
+    } else { SFX.no(); bounce(b, 'shake'); b.classList.add('no'); say(o.n); }
+  });
+}
+// 📒 도감: 친구가 된 캐릭터 모으기 (아직이면 까만 그림자)
+function friendsDex(m) {
+  const g = h('<div class="wgrid dexg"></div>');
+  const all = CHARS(), dex = K().dex;
+  [...all.filter(x => dex[x.id]), ...all.filter(x => !dex[x.id])].forEach(x => {
+    const on = !!dex[x.id];
+    const b = h(`<button class="wt press ${on ? '' : 'shadow'}">${charImg(x)}<span class="w">${on ? x.n : '?'}</span></button>`);
+    b.onclick = () => { if (on) { bounce(b, 'dance'); say(x.n); } else { bounce(b, 'shake'); SFX.no(); } };
+    g.append(b);
+  });
+  m.append(g);
+}
+
+/* ───────── 🃏 짝 맞추기: 카드를 뒤집어 같은 짝 찾기 ─────────
+   아린: 글자 ↔ 그림 (ㄱ ↔ 🚂), 다빈: 낱말 ↔ 그림. 배운 것에서 나옴 */
+function memory() {
+  topbar('🃏 짝 맞추기', () => go(menu));
+  const m = mainEl();
+  const L = learned(), wins = K().mem || 0;
+  let pairs;
+  if (kid === 'arin') {
+    const n = wins < 3 ? 3 : 4;
+    let ls = [...new Set(L.letters.map(x => x.v))].filter(j => info(j));
+    if (ls.length < n) ls = [...new Set([...ls, ...ARIN_SEQ.filter(t => t !== '+')])];
+    const recent = ls.slice(-6);
+    pairs = shuffle(recent).slice(0, n).map(j => { const x = info(j); return { key: j, a: { html: `<span style="color:var(--${isCons(j) ? 'c' : 'v'})">${j}</span>`, say: [phon(j)] }, b: { html: x.e, say: [x.w] } }; });
+  } else {
+    const n = wins < 2 ? 4 : 6;
+    const seen = new Set(), ws = [];
+    for (const w of shuffle([...L.words.map(x => x.v).filter(w => w.n <= 3), ...knownWords().filter(w => w.n <= 3)])) { if (!seen.has(w.e)) { seen.add(w.e); ws.push(w); } if (ws.length >= n) break; }
+    pairs = ws.map(w => ({ key: w.w, a: { html: w.w, say: null, cls: 'mw' }, b: { html: w.e, say: [w.w] } }));
+  }
+  const cards = shuffle(pairs.flatMap(p => [{ ...p.a, key: p.key }, { ...p.b, key: p.key }]));
+  const cols = cards.length <= 6 ? 3 : 4;
+  const grid = h(`<div class="memg" style="--cols:${cols}">${cards.map((c, i) => `<button class="mc" data-i="${i}"><span class="mf mback">${kid === 'arin' ? '💖' : '⭐'}</span><span class="mf mfront ${c.cls || ''}">${c.html}</span></button>`).join('')}</div>`);
+  m.append(grid);
+  const els = $$('.mc', grid);
+  let open = [], busy = false, done = 0;
+  els.forEach((el, i) => el.onclick = () => {
+    if (busy || el.classList.contains('up')) return;
+    el.classList.add('up'); SFX.tap();
+    const c = cards[i]; if (c.say) say(...c.say);
+    open.push(i);
+    if (open.length < 2) return;
+    const [a, b] = open; open = [];
+    if (cards[a].key === cards[b].key) {
+      setTimeout(() => {
+        [a, b].forEach(k => els[k].classList.add('got')); SFX.ok();
+        say(...(kid === 'arin' ? [phon(cards[a].key), 300, info(cards[a].key).w] : [cards[a].key]));
+        if (++done === pairs.length) setTimeout(win, 1200);
+      }, 500);
+    } else {
+      busy = true;
+      setTimeout(() => { [a, b].forEach(k => els[k].classList.remove('up')); busy = false; }, 1200);
+    }
+  });
+  function win() {
+    K().mem = wins + 1; save();
+    SFX.tada(); confetti(50); say('짝을 다 찾았어!'); addStar(grid);
+    const nb = h('<button class="nextbtn">한 번 더 ▶</button>'); nb.onclick = () => go(memory); m.append(nb);
+  }
+}
+
+/* ───────── 📚 그림책: 한 장씩 넘기며 짧은 문장 읽기 ─────────
+   ⭐ = 받침 없는 문장 (다빈이가 지금 읽을 수 있는 것), ⭐⭐ = 받침 있는 문장. 낱말을 누르면 그 낱말만, 🔊 는 한 낱말씩 읽어 줌 */
+const BOOKS = [
+  { id: 'hippo', t: '하마의 하루', c: '🦛', lv: 1, p: [['🦛💤', '하마가 자요.'], ['🦛🥛', '하마가 우유 마셔요.'], ['🦛🚌', '하마가 버스 타요.'], ['🦛🌊', '하마가 바다로 가요.'], ['🦛👃', '하마 코가 커요.'], ['🦛😴', '하마가 다시 자요.']] },
+  { id: 'butterfly', t: '나비야 나비야', c: '🦋', lv: 1, p: [['🦋🌳', '나비가 나무로 가요.'], ['🦋🎹', '나비가 피아노 쳐요.'], ['🦋🧢', '나비가 모자 사요.'], ['🌧️🦋', '아이고, 비다!'], ['🌳🦋', '나무가 나비 지켜요.'], ['🦋☀️', '나비가 다시 나무로 가요.']] },
+  { id: 'train', t: '기차 타요', c: '🚂', lv: 1, p: [['🚂', '기차가 기다려요.'], ['🦊🚂', '여우가 기차 타요.'], ['🦁🚂', '사자도 기차 타요.'], ['🦛🚂', '하마도 타요.'], ['🚂🐢', '기차가 너무 느려요.'], ['🚂🌊', '기차가 바다로 가요.'], ['🌊🎉', '여기가 바다다!']] },
+  { id: 'duck', t: '아기 오리', c: '🦆', lv: 1, p: [['🦆🐣', '오리가 아기 오리 기다려요.'], ['🐣🍠', '아기 오리가 고구마 사요.'], ['🐣🦝', '아기 오리가 너구리 보아요.'], ['🦝🐣', '너구리가 아기 오리 지켜요.'], ['🦆🐣🌊', '모두 바다로 가요.'], ['🐣💤', '아기 오리가 코 자요.']] },
+  { id: 'picnic', t: '우리 가족 소풍', c: '🧺', lv: 2, p: [['🧺☀️', '오늘은 소풍 가는 날!'], ['👨🍙', '아빠가 김밥을 싸요.'], ['👩🍓', '엄마가 딸기를 씻어요.'], ['👦⚽', '다빈이는 공을 차요.'], ['👧🌼', '아린이는 꽃을 봐요.'], ['👨‍👩‍👦‍👦💖', '우리 가족 모두 행복해요!']] },
+  { id: 'snow', t: '눈 오는 날', c: '⛄', lv: 2, p: [['🌨️', '하늘에서 눈이 와요.'], ['⛄', '눈사람을 만들어요.'], ['🥕⛄', '코는 당근이에요.'], ['🧢⛄', '모자도 씌워요.'], ['⛄😊', '눈사람이 웃어요.'], ['🧤❄️', '추워도 재미있어요!']] },
+];
+function books() {
+  topbar('📚 그림책', () => go(menu));
+  const m = mainEl();
+  const g = h('<div class="shelf2"></div>');
+  BOOKS.forEach(b => {
+    const el = h(`<button class="book press"><span class="bc">${b.c}</span><span class="bt">${b.t}</span><span class="bl">${'⭐'.repeat(b.lv)}${K().books[b.id] ? ' ✅' : ''}</span></button>`);
+    el.onclick = () => { SFX.tap(); go(readBook, b, 0); };
+    g.append(el);
+  });
+  m.append(g, h('<div class="hint">⭐ 받침 없는 문장 · ⭐⭐ 받침 있는 문장 · 낱말을 누르면 소리가 나요</div>'));
+}
+function readBook(b, pi) {
+  topbar(`📚 ${b.t}`, () => go(books));
+  const m = mainEl();
+  const [scene, text] = b.p[pi], words = text.split(' ');
+  const pg = h(`<div class="page"><button class="scene">${scene}</button>
+    <div class="sent">${words.map(w => `<button class="wd">${w}</button>`).join(' ')}</div>
+    <div class="row"><button class="rb press prev">◀</button><button class="rb go press snd">🔊</button><button class="rb press next">${pi === b.p.length - 1 ? '끝 ✔' : '▶'}</button></div>
+    <div class="dots">${b.p.map((_, i) => `<i class="${i === pi ? 'on' : ''}"></i>`).join('')}</div></div>`);
+  m.append(pg);
+  const wds = $$('.wd', pg);
+  const clean = w => w.replace(/[.,!?]/g, '');
+  wds.forEach(el => el.onclick = () => { wds.forEach(e => e.classList.remove('lit')); el.classList.add('lit'); bounce(el); say(clean(el.textContent)); });
+  // 🔊 한 낱말씩 불 켜며 읽기
+  async function readAll() {
+    const tok = ++sayTok; if (synth) synth.cancel(); await sleep(60);
+    for (const el of wds) { if (tok !== sayTok) return; wds.forEach(e => e.classList.remove('lit')); el.classList.add('lit'); await speak1(clean(el.textContent)); await sleep(120); }
+    if (tok === sayTok) wds.forEach(e => e.classList.add('lit'));
+  }
+  $('.snd', pg).onclick = readAll;
+  $('.scene', pg).onclick = () => { bounce($('.scene', pg)); readAll(); };
+  $('.prev', pg).onclick = () => { if (pi > 0) go(readBook, b, pi - 1); };
+  $('.next', pg).onclick = () => {
+    if (pi < b.p.length - 1) return go(readBook, b, pi + 1);
+    const first = !K().books[b.id]; K().books[b.id] = 1; save();
+    SFX.tada(); confetti(50); say('끝!', 300, '참 잘 읽었어!');
+    addStar($('.scene', pg)); if (first) setTimeout(() => addStar($('.scene', pg)), 400);
+    setTimeout(() => go(books), 2600);
+  };
+  if (kid === 'arin') setTimeout(readAll, 400);   // 아린이는 읽어 주기
+}
+
+/* ───────── 🔥 연속 출석: 오늘의 한글을 7일 연속 끝내면 큰 선물 ─────────
+   7일마다: 🏆 트로피 + ⭐ 5 + (방이 연결돼 있으면) 🪙 5 보너스 */
+function streakOf(k = kid) {
+  const log = S.kids[k].log, d = new Date();
+  if (!log[dayKey(d)]) d.setDate(d.getDate() - 1);     // 오늘 아직이면 어제까지 센 것
+  let n = 0; while (log[dayKey(d)]) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function streakEl() {
+  const n = streakOf(), left = 7 - (n % 7);
+  return h(`<div class="streak">${n ? `🔥 <b>${n}일</b> 연속` : '🔥 오늘부터 시작!'} <small>· 🎁 큰 선물까지 ${left}일</small></div>`);
+}
+function giveStreakBonus() {
+  const k = K(); k.trophies = (k.trophies || 0) + 1; save();
+  if (!S.house) return false;
+  const d = dayState().date;
+  for (let i = 0; i < 5; i++) { const id = `hangul-streak-${d}-${i}`; if (!S.coinQ.some(c => c.id === id)) S.coinQ.push({ k: kid, d, id }); }
+  save(); startFirebase().then(flushCoins);
+  return true;
+}
+
 /* ───────── ⚙️ 부모 설정 ───────── */
 function settings() {
   const vs = koVoices();
@@ -1526,6 +1821,10 @@ function settings() {
         <br>아린 (36과): 글자 하나씩(ㄱ→ㄴ→ㅏ…) 배우다가 사이사이 '가 나'처럼 배운 글자를 합쳐 보는 날. 복습은 소리 듣고 글자 고르기, 그림 보고 첫 글자 고르기.
         <br>다빈 (28과): ㄱ~ㅎ 자음 줄(가거고구기) 14과 → ㅐ ㅔ → ㅟ ㅢ → ㅘ ㅝ ㅚ → ㄲ → ㄸ ㅃ → ㅆ ㅉ → 받침 ㄴ ㅇ ㅁ ㄹ ㄱ ㅂ ㅅ. 복습은 소리 듣고 글자, 읽고 그림, 그림 보고 맞는 글씨 고르기(헷갈리는 글자로). 틀린 문제는 조금 뒤에 다시 나와요.
         <br>끝까지 다 배우면 매일 복습하는 날이 돼요.</li>
+      <li>🐾 <b>친구 이름</b>: 다빈은 포켓몬, 아린은 티니핑 이름으로 글자 조각 맞추기(아린은 빈칸에 글자 모양이 흐리게 보여요), 다빈은 이름 읽고 친구 찾기도. 맞히면 📒 도감에 모여요. 다빈이 이름은 배운 만큼 쉬운 것부터(받침 없는 이름 → 쌍자음·겹모음 → 받침).</li>
+      <li>🃏 <b>짝 맞추기</b>: 아린은 글자 ↔ 그림, 다빈은 낱말 ↔ 그림. 배운 것에서 나와요.</li>
+      <li>📚 <b>그림책</b>: ⭐ 받침 없는 문장 4권, ⭐⭐ 받침 있는 문장 2권. 아린이는 페이지마다 읽어 줘요.</li>
+      <li>🔥 <b>연속 출석</b>: 오늘의 한글을 7일 연속 끝내면 🏆 트로피 + ⭐ 5 + (방이 연결돼 있으면) 🪙 5개 더.</li>
       <li>별 10개마다 동물 스티커가 생겨요.</li>
     </ul>
     <h3>처음부터 다시</h3>
