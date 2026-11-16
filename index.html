@@ -252,6 +252,9 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
 .jm .pal button{width:min(7.6vmin,62px);height:min(7.6vmin,62px);font-size:min(5.4vmin,42px);border-radius:16px}
 .jm .bonus{height:min(8vmin,60px)}
 
+.coinline{font-size:44px;background:#FFF4C7;border-radius:999px;padding:4px 26px;box-shadow:0 4px 0 #F2C94C;animation:popin .5s 1.4s both cubic-bezier(.3,1.6,.5,1)}
+.coinline small{font-size:24px;color:var(--soft)}
+
 /* settings */
 .sheet{background:#fff;border-radius:34px;padding:26px 30px;width:min(94vw,680px);max-height:90vh;overflow-y:auto;font-family:system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;font-size:18px;line-height:1.5;user-select:text;-webkit-user-select:text}
 .sheet h2{font-family:var(--font);font-weight:400;font-size:30px;margin:0 0 8px}
@@ -268,6 +271,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
 </head>
 <body>
 <div id="app"></div>
+<script src="firebase-config.js"></script>
 <script>
 'use strict';
 /* ───────── 작은 도구 ───────── */
@@ -485,6 +489,7 @@ const SFX = {
   pop() { tone(900, .08, 'square', 0, .07, 300); tone(1400, .12, 'triangle', .03, .12); },
   tap() { tone(660, .06, 'triangle', 0, .08); },
   tada() { [523, 659, 784, 1047].forEach((f, i) => tone(f, .3, 'triangle', i * .11, .15)); },
+  coin() { tone(988, .09, 'square', 0, .08); tone(1319, .35, 'square', .08, .08); },
 };
 let unlocked = false;
 document.addEventListener('pointerdown', () => {
@@ -883,12 +888,17 @@ function dayDone() {
   const d = dayState(), k = K();
   if (d.done) return go(daily);
   d.done = true; k.log[d.date] = 1; save();
+  const coin = giveCoin();
   go(daily);
   const ov = h(`<div class="ov"><div class="bigcard"><div style="font-size:46px">오늘의 한글 끝!</div><div class="sticker">🏅</div>
-    <div style="font-size:28px;color:var(--soft)">⭐ +3</div><div class="row"><button class="gobig press">좋아! 👍</button></div></div></div>`);
+    <div style="font-size:28px;color:var(--soft)">⭐ +3</div>
+    ${coin ? `<div class="coinline">🪙 +1 <small>${kid === 'arin' ? '티니핑' : '포켓몬'} 방에 쏙!</small></div>` : ''}
+    <div class="row"><button class="gobig press">좋아! 👍</button></div></div></div>`);
   $('.gobig', ov).onclick = () => { ov.remove(); go(daily); };
   document.body.append(ov);
-  SFX.tada(); confetti(60); say('오늘의 한글 끝!', 300, '정말 잘했어!');
+  SFX.tada(); confetti(60);
+  if (coin) { setTimeout(SFX.coin, 1500); say('오늘의 한글 끝!', 300, '정말 잘했어!', 300, '코인 하나!'); }
+  else say('오늘의 한글 끝!', 300, '정말 잘했어!');
   [0, 350, 700].forEach(ms => setTimeout(() => addStar($('.sticker', ov)), 600 + ms));
 }
 
@@ -1400,6 +1410,87 @@ function balloons() {
   requestAnimationFrame(() => { round(); raf = requestAnimationFrame(tick); });
 }
 
+/* ───────── 🪙 우리가족 방 연결 (우리가족 앱과 같은 Firebase · 가족 문서) ─────────
+   오늘의 한글을 다 끝낸 날: households/{코드}.kids.{아이}.room.items['hangul-날짜'] = 'coin'
+   방 화면은 'coin' 칸을 모두 세므로 우리가족 앱은 고칠 것 없음. 날짜가 칸 이름이라 하루에 한 개만.
+   ROOM_FIELD 는 our-family/stickers-shared.js 의 FS.ROOM 과 같아야 함 (방을 리셋하며 이름을 바꾸면 여기도). */
+const ROOM_FIELD = 'room';
+const FB = { A: null, F: null, auth: null, db: null, user: null, ready: false, err: '', loading: null };
+S.coinQ = S.coinQ || [];
+function startFirebase() {
+  if (FB.loading) return FB.loading;
+  if (!window.FIREBASE_CONFIG) return Promise.resolve();
+  FB.loading = (async () => {
+    try {
+      const V = 'https://www.gstatic.com/firebasejs/10.12.2/';
+      const [{ initializeApp }, A, F] = await Promise.all([import(V + 'firebase-app.js'), import(V + 'firebase-auth.js'), import(V + 'firebase-firestore.js')]);
+      const app = initializeApp(window.FIREBASE_CONFIG);
+      let db;
+      try { db = F.initializeFirestore(app, { localCache: F.persistentLocalCache({ tabManager: F.persistentMultipleTabManager() }) }); }
+      catch (e) { db = F.getFirestore(app); }
+      Object.assign(FB, { A, F, auth: A.getAuth(app), db });
+      await new Promise(res => A.onAuthStateChanged(FB.auth, async user => {
+        FB.user = user; FB.ready = true; FB.err = '';
+        if (user && !S.house) {
+          try { const u = await F.getDoc(F.doc(db, 'users', user.uid)); if (u.exists() && u.data().house) { S.house = u.data().house; save(); } }
+          catch (e) { console.warn('house', e); }
+        }
+        flushCoins(); refreshLink(); res();
+      }));
+    } catch (e) { console.warn('firebase', e); FB.err = '연결하지 못했어요. 인터넷을 확인해 주세요.'; FB.loading = null; refreshLink(); }
+  })();
+  return FB.loading;
+}
+function flushCoins() {
+  if (!FB.user || !S.house || !S.coinQ.length) return;
+  const F = FB.F, ref = F.doc(FB.db, 'households', S.house);
+  for (const c of S.coinQ.splice(0)) {
+    F.updateDoc(ref, new F.FieldPath('kids', c.k, ROOM_FIELD, 'items', 'hangul-' + c.d), 'coin')
+      .catch(e => { console.warn('coin', e); S.coinQ.push(c); save(); });
+  }
+  save();
+}
+// 연결돼 있으면 오늘 코인 1개 (인터넷이 없으면 기기에 모아 뒀다가 다음에 보냄)
+function giveCoin() {
+  if (!S.house) return false;
+  const d = dayState().date;
+  if (!S.coinQ.some(c => c.k === kid && c.d === d)) S.coinQ.push({ k: kid, d });
+  save(); startFirebase().then(flushCoins);
+  return true;
+}
+async function joinHouse(raw) {
+  const code = String(raw).toUpperCase().replace(/[^A-Z0-9]/g, '');
+  FB.err = '';
+  try {
+    if (!code || !(await FB.F.getDoc(FB.F.doc(FB.db, 'households', code))).exists()) { FB.err = '가족 코드를 찾지 못했어요'; return refreshLink(); }
+    await FB.F.setDoc(FB.F.doc(FB.db, 'users', FB.user.uid), { house: code }, { merge: true });
+    S.house = code; save(); flushCoins();
+  } catch (e) { console.warn(e); FB.err = '가족 코드를 찾지 못했어요'; }
+  refreshLink();
+}
+// 설정 창 안의 연결 칸 그리기
+function refreshLink() {
+  const box = $('#link'); if (!box) return;
+  const err = FB.err ? `<div class="note" style="color:#d33">${FB.err}</div>` : '';
+  if (!FB.auth) { box.innerHTML = err || '<div class="note">불러오는 중…</div>'; return; }
+  if (!FB.user) {
+    box.innerHTML = `${S.house ? '<div class="note">다시 로그인해 주세요.</div>' : ''}<button class="sbtn" id="gsign">구글로 로그인</button>${err}`;
+    $('#gsign').onclick = () => FB.A.signInWithPopup(FB.auth, new FB.A.GoogleAuthProvider())
+      .catch(e => { if (!/popup-closed|cancelled-popup/.test(String(e && e.code))) { FB.err = '로그인하지 못했어요'; refreshLink(); } });
+    return;
+  }
+  if (!S.house) {
+    box.innerHTML = `<div class="note">우리가족 앱 설정에 있는 가족 코드를 넣어 주세요.</div>
+      <input id="hcode" placeholder="가족 코드" autocapitalize="characters" style="font-size:18px;padding:8px 12px;border-radius:12px;border:1px solid #ddd;width:12em"> <button class="sbtn" id="hjoin">연결</button>${err}`;
+    $('#hjoin').onclick = () => joinHouse($('#hcode').value);
+    return;
+  }
+  box.innerHTML = `<div>✅ 연결됨 · ${FB.user.displayName || '구글 계정'} · 가족 코드 ${S.house}</div>
+    ${S.coinQ.length ? `<div class="note">보낼 코인 ${S.coinQ.length}개가 기다리는 중 (인터넷이 되면 들어가요)</div>` : ''}
+    <button class="sbtn" id="gout" style="margin-top:6px">연결 끊기</button>${err}`;
+  $('#gout').onclick = async () => { if (!confirm('연결을 끊을까요? 그 뒤로는 코인이 방에 들어가지 않아요.')) return; S.house = null; S.coinQ = []; save(); await FB.A.signOut(FB.auth); refreshLink(); };
+}
+
 /* ───────── ⚙️ 부모 설정 ───────── */
 function settings() {
   const vs = koVoices();
@@ -1415,6 +1506,9 @@ function settings() {
     <div class="note" style="margin-top:6px">소리가 안 나거나 어색하면: 아이패드 설정 → 손쉬운 사용 → 콘텐츠 말하기 → 음성 → 한국어 → '유나(향상됨)' 받기. 무음 모드면 효과음이 안 날 수 있어요.</div>
     <h3>지금까지</h3>
     <table>${row('davin')}${row('arin')}</table>
+    <h3>🪙 포켓몬·티니핑 방 연결</h3>
+    <div class="note">연결하면 오늘의 한글을 다 끝낸 날마다 다빈이는 포켓몬 방, 아린이는 티니핑 방에 코인 1개가 들어가요 (하루 한 개). 우리가족 앱과 같은 구글 계정과 가족 코드로 처음 한 번만 연결하면 돼요.</div>
+    <div id="link" style="margin-top:6px"></div>
     <h3>📅 오늘의 한글 — 오늘 글자</h3>
     <div class="note">하루 미션을 다 끝내면 다음 날 새 글자로 넘어가요. 너무 쉽거나 어려우면 여기서 바꿔 주세요.</div>
     ${['davin', 'arin'].map(k => `<div style="margin:6px 0">${KIDS[k].name}: <button class="sbtn" data-ls="${k}" data-d="-1">◀</button> <b data-lt="${k}"></b> <button class="sbtn" data-ls="${k}" data-d="1">▶</button></div>`).join('')}
@@ -1450,10 +1544,12 @@ function settings() {
   showLesson();
   $('#close', ov).onclick = () => { ov.remove(); go(home); };
   document.body.append(ov);
+  refreshLink(); startFirebase();
 }
 
 /* ───────── 시작 ───────── */
 go(home);
+if (S.house) startFirebase();   // 못 보낸 코인 보내기
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
 document.addEventListener('gesturestart', e => e.preventDefault());
 </script>
