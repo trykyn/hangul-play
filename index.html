@@ -1764,12 +1764,15 @@ function flushCoins() {
   for (const c of S.coinQ.splice(0)) {
     // 특별 알: 방의 주간 미션 황금 알과 같은 모양 {egg:'gold'} (포켓몬 = 황금 알, 티니핑 = 황금 하트)
     const path = c.egg ? new F.FieldPath('kids', c.k, ROOM_FIELD, 'mons', c.id) : new F.FieldPath('kids', c.k, ROOM_FIELD, 'items', c.id || 'hangul-' + c.d);
-    F.updateDoc(ref, path, c.egg ? { egg: 'gold', f: 0, at: c.at || Date.now() } : 'coin')
+    const id = c.id || 'hangul-' + c.d, log = c.egg ? [] : [new F.FieldPath('kids', c.k, ROOM_FIELD, 'clog', 'h' + id), [c.at || Date.now(), 1, coinWhy(id)]];
+    F.updateDoc(ref, path, c.egg ? { egg: 'gold', f: 0, at: c.at || Date.now() } : 'coin', ...log)
       .then(() => c.egg && eggToRoom(ref, c))
       .catch(e => { console.warn('coin', e); S.coinQ.push(c); save(); });
   }
   save();
 }
+// 코인 기록에 보일 이유: 오늘의 한글 · 도전 · 7일 연속 · 승급 시험 (our-family/poke-room.js 의 hangulWhy 와 같은 뜻)
+function coinWhy(id) { const u = /^hangul-unit(\w+)-\d+$/.exec(id); return u ? `hangul:unit:${u[1]}` : /-chal$/.test(id) ? 'hangul:chal' : id.startsWith('hangul-streak-') ? 'hangul:streak' : 'hangul:day'; }
 // 방에 나온 친구가 6마리보다 적으면 새 알도 방에 꺼내 두기 (아니면 친구 목록에서 기다림)
 async function eggToRoom(ref, c) {
   try {
@@ -1781,7 +1784,7 @@ async function eggToRoom(ref, c) {
 function queueCoins(ids) {
   if (!S.house || !ids.length) return 0;
   const d = dayState().date;
-  ids.forEach(id => { if (!S.coinQ.some(c => c.k === kid && c.id === id)) S.coinQ.push({ k: kid, d, id }); });
+  ids.forEach(id => { if (!S.coinQ.some(c => c.k === kid && c.id === id)) S.coinQ.push({ k: kid, d, id, at: Date.now() }); });
   save(); startFirebase().then(flushCoins);
   return ids.length;
 }
@@ -1789,7 +1792,7 @@ function queueCoins(ids) {
 function giveCoin() {
   if (!S.house) return false;
   const d = dayState().date;
-  if (!S.coinQ.some(c => c.k === kid && c.d === d && !c.id)) S.coinQ.push({ k: kid, d });
+  if (!S.coinQ.some(c => c.k === kid && c.d === d && !c.id)) S.coinQ.push({ k: kid, d, at: Date.now() });
   save(); startFirebase().then(flushCoins);
   return true;
 }
@@ -2069,7 +2072,7 @@ function giveStreakBonus() {
   const egg = k.trophies % EGG_EVERY === 0;
   if (!S.house) return { coins: false, egg: false };
   const d = dayState().date;
-  for (let i = 0; i < 5; i++) { const id = `hangul-streak-${d}-${i}`; if (!S.coinQ.some(c => c.id === id)) S.coinQ.push({ k: kid, d, id }); }
+  for (let i = 0; i < 5; i++) { const id = `hangul-streak-${d}-${i}`; if (!S.coinQ.some(c => c.id === id)) S.coinQ.push({ k: kid, d, id, at: Date.now() }); }
   if (egg && !S.coinQ.some(c => c.id === `hangul-gold-${d}`)) S.coinQ.push({ k: kid, d, id: `hangul-gold-${d}`, egg: 1, at: Date.now() });
   save(); startFirebase().then(flushCoins);
   return { coins: true, egg };
