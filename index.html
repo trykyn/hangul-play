@@ -620,8 +620,11 @@ function confetti(n = 36) {
    틀리면 잠깐 '생각 시간' (보기를 누를 수 없고 흐려짐) 뒤에 문제를 다시 들려줌.
    ⭐ 과 오늘의 미션 칸은 한 번에 맞혔을 때만 — 틀린 문제는 맞혀도 '다음엔 한 번에!' (복습은 나중에 다시 나옴) */
 const thinkMs = () => kid === 'arin' ? 1800 : 2500;
+function later(el, fn, ms) {
+  setTimeout(function w() { if (!el.isConnected) return; if ($('.ov')) return setTimeout(w, 400); fn(); }, ms);
+}
 function thinkLock(area, replay) {
-  if (!area || area.classList.contains('think')) return;
+  if (!area || !area.isConnected || area.classList.contains('think')) return;
   area.classList.add('think');
   const b = h(`<div class="thinkb">🤔 ${kid === 'arin' ? '잘 듣고' : '잘 생각하고'} 다시!</div>`);
   document.body.append(b);
@@ -790,6 +793,7 @@ const TEST = { chal: { davin: [5, 4], arin: [4, 3] }, exam: { davin: [10, 8], ar
 // 오늘(p)이 끝난 뒤 다음 날: 못 끝냈으면 같은 날 다시 / 단원 끝 → 시험 / 시험 못 넘음 → 헷갈린 글자 복습 → 다시 시험
 function nextDay(p, k = K()) {
   if (!p) return { lesson: 0 };
+  if (p.mode === 'exam' && k.units[p.unit]) return { lesson: p.lesson + 1 };
   if (!p.done) return p.mode ? { lesson: p.lesson, mode: p.mode, unit: p.unit } : { lesson: p.lesson };
   if (p.mode === 'exam') return k.units[p.unit] ? { lesson: p.lesson + 1 } : { lesson: p.lesson, mode: 'fix', unit: p.unit };
   if (p.mode === 'fix') return { lesson: p.lesson, mode: 'exam', unit: p.unit };
@@ -920,6 +924,7 @@ function daily() {
 }
 function startTask(id) {
   const d = dayState(), l = curLesson(d), t = dailyTasks().find(t => t.id === id);
+  if (!t) return go(daily);      // 날이 바뀌어 오늘 미션에 없는 칸
   DM = { id, letter: l.jamo[0] || '', finished: (d.prog[id] || 0) >= t.n };
   SFX.tap();
   const L = DM.letter;
@@ -943,10 +948,12 @@ function dmWord(min, max) {
   return rnd(pool);
 }
 // 글자 만들기 미션: 오늘 과의 글자를 차례로
-let dmSylQ = [];
+let dmSylQ = [], dmSylK = '';
 function dmSyl() {
   const l = curLesson();
   const all = l.kind === 'row' ? VJ.map(v => compose(l.jamo[0], v)) : l.syl;
+  const key = kid + dayState().date + dayState().lesson;
+  if (key !== dmSylK) { dmSylK = key; dmSylQ = []; }
   if (!dmSylQ.length) dmSylQ = shuffle(all);
   return dmSylQ.shift();
 }
@@ -993,7 +1000,8 @@ function makeQ(L) {
   }
   if (ty === 'hearS') {
     const a = pickW(L.syl, L.today);
-    const near = []; for (let i = 0; i < 12; i++) near.push(mutateSyl(a));
+    const snd = s => { const [c, v, t] = decompose(s); return c + ({ ㅔ: 'ㅐ', ㅖ: 'ㅒ', ㅚ: 'ㅙ', ㅞ: 'ㅙ' }[v] || v) + ({ ㅅ: 'ㄷ', ㅆ: 'ㄷ', ㅈ: 'ㄷ', ㅊ: 'ㄷ', ㅌ: 'ㄷ', ㅎ: 'ㄷ', ㅋ: 'ㄱ', ㄲ: 'ㄱ', ㅍ: 'ㅂ' }[t] || t); };
+    const near = []; for (let i = 0; i < 12; i++) { const y = mutateSyl(a); if (snd(y) !== snd(a)) near.push(y); }
     const others = fillOthers(a, kid === 'arin' ? L.syl.map(x => x.v) : near, near, 2);
     const opts = shuffle([a, ...others]).map(s => ({ html: s, val: s, say: [s] }));
     return { ty, show: '<button class="qbig">🔊</button>', tap: [a], ask: [a], opts, ans: a, done: blendParts(a) };
@@ -1038,7 +1046,7 @@ function review() {
         $$('.rword button', top).forEach(e => e.classList.add('lit'));
         SFX.ok(); say(...q.done);
         if (!q.wrong) { addStar(b); report('review'); recordHit(q.ans); } else oops();
-        setTimeout(() => { if (box.isConnected && !$('.ov')) next(); }, 2000);
+        later(box, next, 2000);
       } else {
         SFX.no(); bounce(b, 'shake'); b.classList.add('no'); say(...o.say);
         if (!q.again) { q.again = true; retry.push({ ...q, wrong: false, opts: shuffle(q.opts) }); }
@@ -1096,13 +1104,14 @@ function testRun(kind) {
       marks.push(ok); save(); paintDots();
       if (ok) { SFX.ok(); say(...q.done); addStar(b); recordHit(q.ans); }
       else { SFX.no(); bounce(b, 'shake'); if (q.ty !== 'readW') recordMiss(q.ans, o.val); say('정답은', 300, ...q.done); bounce(good, 'pop'); }
-      setTimeout(() => { if (box.isConnected && !$('.ov')) next(); else if (box.isConnected) { const w = setInterval(() => { if (!box.isConnected) clearInterval(w); else if (!$('.ov')) { clearInterval(w); next(); } }, 400); } }, ok ? 1900 : 3000);
+      later(box, next, ok ? 1900 : 3000);
     });
   }
   function end() {
+    if (K().dm !== d || d.date !== dayKey()) return go(daily);   // 시험 중에 날이 바뀜
     const score = marks.filter(Boolean).length, r = { score, n: N, ok: score >= P, marks: marks.slice() };
     d[kind] = r;
-    if (isExam && r.ok) { K().units[d.unit] = d.date; K().medals = (K().medals || 0) + 1; }
+    if (isExam && r.ok && !K().units[d.unit]) { K().units[d.unit] = d.date; K().medals = (K().medals || 0) + 1; }
     save(); showEnd(r, true);
   }
   function showEnd(r, fresh) {
@@ -1181,7 +1190,9 @@ function taskDone() {
 function dayDone() {
   const d = dayState(), k = K();
   if (d.done) return go(daily);
-  d.done = true; k.log[d.date] = 1; save();
+  d.done = true; k.log[d.date] = 1;
+  if (d.paid) { save(); go(daily); return; }     // 부모가 ◀▶ 로 바꾼 뒤 다시 끝낸 날: 보상은 이미 받음
+  d.paid = true; save();
   const coin = giveCoin();
   const chalOK = !!(d.chal && d.chal.ok), examOK = !!(d.exam && d.exam.ok);
   const extra = [];
@@ -1447,7 +1458,7 @@ function traceWord(x, si = 0) {
     strokes, colors: [...c.map(() => '#3B82F6'), ...v.map(() => '#EF5350'), ...tt.map(() => '#17A35B')], hi: hiColor(), width: tt.length ? 7 : 8.5, rule: tt.length && kid === 'davin' ? { tol: 9, cov: .78, dir: true } : traceRule(),
     onDone() {
       if (si < syl.length - 1) {
-        SFX.ok(); say(s); setTimeout(() => go(traceWord, x, si + 1), 1100);
+        SFX.ok(); say(s); setTimeout(() => { if (m.isConnected) go(traceWord, x, si + 1); }, 1100);
       } else {
         SFX.tada(); confetti(); say(s, 500, x.w);
         $$('.wordhead span', m).forEach(e => { e.className = 'dn'; });
@@ -1527,11 +1538,12 @@ function blocks(mode = 'free') {
       setTimeout(() => {
         SFX.tada(); confetti(24); showBonus(s);
         if (!tries) { addStar(res); report('build'); } else oops();
-        setTimeout(newTarget, 1900);
+        setTimeout(() => { if (m.isConnected) newTarget(); }, 1900);
       }, 1500);
     } else {
       say(s, 500, target);
       setTimeout(() => {
+        if (!m.isConnected) return;
         SFX.no();
         if (c !== tc) { bounce(cs, 'shake'); c = null; }
         if (v !== tv) { bounce(vs, 'shake'); v = null; }
@@ -1582,7 +1594,7 @@ function puzzle() {
     <button class="nextbtn hidden">다음 ▶</button></div>`);
   const slots = $$('.pslot', m), tiles = $$('.tile', m);
   const filled = syl.map(() => null);
-  let locked = false, wrong = false;
+  let locked = false, wrong = false, ck = 0;
   $('.pzpic', m).onclick = () => { bounce($('.pzpic', m)); say(x.w); };
   tiles.forEach(t => t.onclick = () => {
     if (locked || t.classList.contains('used')) return;
@@ -1590,13 +1602,14 @@ function puzzle() {
     filled[at] = +t.dataset.i; t.classList.add('used');
     slots[at].textContent = t.textContent; slots[at].classList.add('full'); bounce(slots[at], 'pop');
     say(t.textContent);
-    if (!filled.includes(null)) setTimeout(check, 500);
+    if (!filled.includes(null)) { clearTimeout(ck); ck = setTimeout(check, 500); }
   });
   slots.forEach((sl, i) => sl.onclick = () => {
     if (locked || filled[i] === null) return;
     tiles[filled[i]].classList.remove('used'); filled[i] = null; sl.textContent = ''; sl.classList.remove('full');
   });
   function check() {
+    if (locked || filled.includes(null) || !m.isConnected) return;
     const made = filled.map(i => tilesData[i]).join('');
     if (made === x.w) {
       locked = true; slots.forEach(s => s.classList.add('good'));
@@ -1706,13 +1719,14 @@ function balloons() {
       }
       say(phon(b.j));
       if (!missed) { addStar(b.el); report('balloon'); } else oops();
-      setTimeout(round, 1500);
+      setTimeout(() => { if (sky.isConnected) round(); }, 1500);
     } else {
       SFX.no(); bounce(b.el, 'wob'); say(phon(b.j));
       missed = true; const x = info(target); thinkLock(sky, [phon(target), 350, x.w]);
     }
   }
   function tick(t) {
+    if (!sky.isConnected) return;
     const dt = Math.min(.05, (t - (last || t)) / 1000); last = t;
     const H = sky.clientHeight, sp = speed();
     bl.forEach(b => {
@@ -1724,7 +1738,7 @@ function balloons() {
     raf = requestAnimationFrame(tick);
   }
   cleanups.push(() => cancelAnimationFrame(raf));
-  requestAnimationFrame(() => { round(); raf = requestAnimationFrame(tick); });
+  raf = requestAnimationFrame(() => { if (!sky.isConnected) return; round(); raf = requestAnimationFrame(tick); });
 }
 
 /* ───────── 🪙 우리가족 방 연결 (우리가족 앱과 같은 Firebase · 가족 문서) ─────────
@@ -1891,7 +1905,7 @@ function friends(tab = 'puzzle') {
     <button class="nextbtn hidden">다음 ▶</button></div>`);
   m.append(box);
   const pic = $('.charpic', box), slots = $$('.pslot', box), tiles = $$('.tile', box), filled = syl.map(() => null);
-  let locked = false, wrong = false;
+  let locked = false, wrong = false, ck = 0;
   const clearSlot = i => { slots[i].innerHTML = ghost ? `<i class="ghost">${syl[i]}</i>` : ''; slots[i].classList.remove('full'); filled[i] = null; };
   pic.onclick = () => { bounce(pic); say(x.n); };
   tiles.forEach(t => t.onclick = () => {
@@ -1899,10 +1913,11 @@ function friends(tab = 'puzzle') {
     const at = filled.indexOf(null); if (at < 0) return;
     filled[at] = +t.dataset.i; t.classList.add('used');
     slots[at].textContent = t.textContent; slots[at].classList.add('full'); bounce(slots[at], 'pop'); say(t.textContent);
-    if (!filled.includes(null)) setTimeout(check, 500);
+    if (!filled.includes(null)) { clearTimeout(ck); ck = setTimeout(check, 500); }
   });
   slots.forEach((sl, i) => sl.onclick = () => { if (locked || filled[i] === null) return; tiles[filled[i]].classList.remove('used'); clearSlot(i); });
   function check() {
+    if (locked || filled.includes(null) || !box.isConnected) return;
     if (filled.map(i => tilesData[i]).join('') === x.n) {
       locked = true; slots.forEach(s => s.classList.add('good'));
       befriend(x, pic, !wrong);
@@ -1959,8 +1974,7 @@ function memory() {
   if (kid === 'arin') {
     const n = wins < 3 ? 3 : 4;
     let ls = [...new Set(L.letters.map(x => x.v))].filter(j => info(j));
-    if (ls.length < n) ls = [...new Set([...ls, ...ARIN_SEQ.filter(t => t !== '+')])];
-    const recent = ls.slice(-6);
+    const recent = ls.length >= n ? ls.slice(-6) : [...new Set([...ls, ...ARIN_SEQ.filter(t => t !== '+' && info(t))])].slice(0, n);
     pairs = shuffle(recent).slice(0, n).map(j => { const x = info(j); return { key: j, a: { html: `<span style="color:var(--${isCons(j) ? 'c' : 'v'})">${j}</span>`, say: [phon(j)] }, b: { html: x.e, say: [x.w] } }; });
   } else {
     const n = wins < 2 ? 4 : 6;
@@ -2041,12 +2055,14 @@ function readBook(b, pi) {
   $('.snd', pg).onclick = readAll;
   $('.scene', pg).onclick = () => { bounce($('.scene', pg)); readAll(); };
   $('.prev', pg).onclick = () => { if (pi > 0) go(readBook, b, pi - 1); };
+  let fin = false;
   $('.next', pg).onclick = () => {
     if (pi < b.p.length - 1) return go(readBook, b, pi + 1);
+    if (fin) return; fin = true;
     const first = !K().books[b.id]; K().books[b.id] = 1; save();
     SFX.tada(); confetti(50); say('끝!', 300, '참 잘 읽었어!');
     addStar($('.scene', pg)); if (first) setTimeout(() => addStar($('.scene', pg)), 400);
-    setTimeout(() => go(books), 2600);
+    setTimeout(() => { if (pg.isConnected) go(books); }, 2600);
   };
   if (kid === 'arin') setTimeout(readAll, 400);   // 아린이는 읽어 주기
 }
@@ -2072,8 +2088,8 @@ function giveStreakBonus() {
   const egg = k.trophies % EGG_EVERY === 0;
   if (!S.house) return { coins: false, egg: false };
   const d = dayState().date;
-  for (let i = 0; i < 5; i++) { const id = `hangul-streak-${d}-${i}`; if (!S.coinQ.some(c => c.id === id)) S.coinQ.push({ k: kid, d, id, at: Date.now() }); }
-  if (egg && !S.coinQ.some(c => c.id === `hangul-gold-${d}`)) S.coinQ.push({ k: kid, d, id: `hangul-gold-${d}`, egg: 1, at: Date.now() });
+  for (let i = 0; i < 5; i++) { const id = `hangul-streak-${d}-${i}`; if (!S.coinQ.some(c => c.k === kid && c.id === id)) S.coinQ.push({ k: kid, d, id, at: Date.now() }); }
+  if (egg && !S.coinQ.some(c => c.k === kid && c.id === `hangul-gold-${d}`)) S.coinQ.push({ k: kid, d, id: `hangul-gold-${d}`, egg: 1, at: Date.now() });
   save(); startFirebase().then(flushCoins);
   return { coins: true, egg };
 }
@@ -2138,7 +2154,7 @@ function settings() {
   const showLesson = () => $$('[data-lt]', ov).forEach(e => withKid(e.dataset.lt, () => { const d = dayState(); e.textContent = `${curLesson(d).title} (${d.lesson + 1}번째)`; }));
   $$('[data-ls]', ov).forEach(b => b.onclick = () => withKid(b.dataset.ls, () => {
     const d = dayState(); d.lesson = Math.max(0, d.lesson + +b.dataset.d); d.prog = {}; d.done = false;
-    ['mode', 'unit', 'chal', 'chalP', 'exam', 'examP'].forEach(x => delete d[x]); save(); showLesson();
+    ['mode', 'unit', 'exam', 'examP'].forEach(x => delete d[x]); save(); showLesson();
   }));
   showLesson();
   $('#close', ov).onclick = () => { ov.remove(); go(home); };
@@ -2151,6 +2167,10 @@ go(home);
 if (S.house) startFirebase();   // 못 보낸 코인 보내기
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
 document.addEventListener('gesturestart', e => e.preventDefault());
+// 밤새 켜 둔 앱을 다시 열면 (날이 바뀌었으면) 처음 화면부터
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && S.kids[kid].dm && S.kids[kid].dm.date !== dayKey()) { DM = null; go(home); }
+});
 </script>
 </body>
 </html>
