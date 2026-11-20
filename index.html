@@ -266,6 +266,8 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
 .acts.many .lb{font-size:min(4vmin,32px)}
 .acts.many .ex{font-size:min(2.5vmin,19px)}
 @media (orientation:portrait){.acts.n8{grid-template-columns:repeat(2,1fr)}}
+/* 가로 화면 4칸: 칸이 좁아서 그림·글씨를 조금 작게 ('글자 만들기'가 안 잘리게) */
+@media (orientation:landscape){.acts.n8 .act{padding:0 12px;gap:10px}.acts.n8 .ic{font-size:min(7.5vmin,58px)}.acts.n8 .lb{font-size:min(3.6vmin,30px)}}
 
 /* 🐾 친구 이름 */
 .cimg{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
